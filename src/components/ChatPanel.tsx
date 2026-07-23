@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Message, ContractFields, ContractType } from '../types';
-import { Send, Bot, User, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Send, Bot, User, Loader2, Sparkles, Zap } from 'lucide-react';
 
 interface ChatPanelProps {
   messages: Message[];
@@ -22,7 +22,6 @@ export function ChatPanel({
   const [inputValue, setInputValue] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom of chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isGenerating]);
@@ -34,67 +33,61 @@ export function ChatPanel({
     setInputValue('');
   };
 
-  // Calculate parameters filling progress
+  // Progress calculation
   const getProgress = () => {
     const ndaKeys: (keyof ContractFields)[] = ['poskytovatel', 'prijemce', 'predmet_tajemstvi', 'smluvni_pokuta', 'doba_platnosti', 'rozhodne_pravo'];
     const rentKeys: (keyof ContractFields)[] = ['pronajimatel', 'najemce', 'predmet_najmu', 'vyska_najemneho', 'poplatky_sluzby', 'vratna_kauce', 'vypovedni_lhuta', 'datum_zacatku'];
     const empKeys: (keyof ContractFields)[] = ['zamestnavatel', 'zamestnanec', 'pracovni_pozice', 'misto_vykonu', 'datum_nastupu', 'mzda', 'zkusebni_doba', 'pracovni_doba'];
-
     const targetKeys = contractType === 'nda' ? ndaKeys : contractType === 'rent' ? rentKeys : empKeys;
     const filledCount = targetKeys.filter(k => currentFields[k] && currentFields[k]?.trim() !== '').length;
-    const totalCount = targetKeys.length;
-    const percentage = Math.round((filledCount / totalCount) * 100);
-
-    return { filledCount, totalCount, percentage };
+    return { filledCount, totalCount: targetKeys.length, percentage: Math.round((filledCount / targetKeys.length) * 100) };
   };
 
   const { filledCount, totalCount, percentage } = getProgress();
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] bg-gray-50/50 dark:bg-gray-900/10 border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm" id="chat-panel">
-      {/* Progress Header */}
-      <div className="p-4 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800">
+    <div className="flex flex-col h-[calc(100vh-140px)] bg-zinc-900/40 border border-zinc-800/50 rounded-2xl overflow-hidden shadow-lg backdrop-blur-sm" id="chat-panel">
+      {/* Progress header */}
+      <div className="px-4 pt-4 pb-3 border-b border-zinc-800/50">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
-              Konverzační asistent
-            </span>
+            <Sparkles className="w-3.5 h-3.5 text-gold" />
+            <span className="text-xs font-semibold text-zinc-300">Konverzační asistent</span>
           </div>
-          <span className="text-xs font-semibold px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full">
-            {filledCount} z {totalCount} údajů ({percentage}%)
+          <span className="text-[10px] font-medium px-2 py-0.5 bg-zinc-800/80 text-zinc-400 rounded-full">
+            {filledCount}/{totalCount}
           </span>
         </div>
-        {/* Progress bar */}
-        <div className="w-full bg-gray-100 dark:bg-gray-800 h-2 rounded-full overflow-hidden">
-          <div 
-            className="bg-emerald-500 h-full transition-all duration-500 ease-out"
+        <div className="w-full bg-zinc-800/60 h-1 rounded-full overflow-hidden">
+          <div
+            className="bg-gold h-full transition-all duration-700 ease-out rounded-full"
             style={{ width: `${percentage}%` }}
           />
         </div>
       </div>
 
-      {/* Messages List */}
-      <div className="flex-grow overflow-y-auto p-4 space-y-4">
+      {/* Messages */}
+      <div className="flex-grow overflow-y-auto p-4 space-y-3">
         {messages.map((msg) => {
           const isAssistant = msg.sender === 'assistant';
           return (
             <div
               key={msg.id}
-              className={`flex gap-3 max-w-[85%] ${isAssistant ? 'mr-auto' : 'ml-auto flex-row-reverse'}`}
+              className={`flex gap-2.5 max-w-[88%] animate-slide-in ${isAssistant ? 'mr-auto' : 'ml-auto flex-row-reverse'}`}
+              style={{ animationDelay: '0ms' }}
             >
-              <div className={`p-2 rounded-xl flex-shrink-0 w-8 h-8 flex items-center justify-center ${
-                isAssistant 
-                  ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400' 
-                  : 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+              {/* Avatar */}
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                isAssistant ? 'bg-gold/20 text-gold' : 'bg-zinc-700 text-zinc-300'
               }`}>
-                {isAssistant ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                {isAssistant ? <Bot className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
               </div>
 
-              <div className={`p-3.5 rounded-2xl shadow-sm text-sm leading-relaxed whitespace-pre-wrap ${
-                isAssistant 
-                  ? 'bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-sm' 
-                  : 'bg-emerald-600 text-white rounded-tr-sm'
+              {/* Bubble */}
+              <div className={`px-3.5 py-2.5 text-xs leading-relaxed whitespace-pre-wrap ${
+                isAssistant
+                  ? 'bg-zinc-800/80 text-zinc-200 rounded-2xl rounded-tl-sm border border-zinc-700/40'
+                  : 'bg-gold/20 text-zinc-100 rounded-2xl rounded-tr-sm border border-gold/10'
               }`}>
                 {msg.text}
               </div>
@@ -103,13 +96,13 @@ export function ChatPanel({
         })}
 
         {isGenerating && (
-          <div className="flex gap-3 max-w-[85%] mr-auto">
-            <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 w-8 h-8 flex items-center justify-center">
-              <Bot className="w-4 h-4" />
+          <div className="flex gap-2.5 max-w-[88%] mr-auto animate-fade-in">
+            <div className="w-7 h-7 rounded-full bg-gold/20 text-gold flex items-center justify-center flex-shrink-0">
+              <Bot className="w-3.5 h-3.5" />
             </div>
-            <div className="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 p-4 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-gray-500 text-xs">
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-500" />
-              DocuGenius AI píše odpověď a zpracovává data...
+            <div className="bg-zinc-800/80 border border-zinc-700/40 px-4 py-3 rounded-2xl rounded-tl-sm flex items-center gap-2.5">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-gold" />
+              <span className="text-[11px] text-zinc-400">DocuGenius zpracovává...</span>
             </div>
           </div>
         )}
@@ -117,17 +110,17 @@ export function ChatPanel({
         <div ref={chatEndRef} />
       </div>
 
-      {/* Suggested Prompts & Input Area */}
-      <div className="p-4 bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800">
-        {/* Chips */}
+      {/* Input area */}
+      <div className="px-4 pb-4 pt-3 border-t border-zinc-800/50">
+        {/* Smart suggestion chips */}
         {nextSuggestedPrompts.length > 0 && !isGenerating && (
-          <div className="flex flex-wrap gap-2 mb-3">
+          <div className="flex flex-wrap gap-1.5 mb-3">
             {nextSuggestedPrompts.map((prompt, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={() => onSendMessage(prompt)}
-                className="text-xs bg-gray-50 hover:bg-gray-100 dark:bg-gray-900/60 dark:hover:bg-gray-900 text-emerald-700 dark:text-emerald-400 px-3 py-1.5 rounded-full border border-gray-100 dark:border-gray-800 transition-colors cursor-pointer text-left"
+                className="text-[10px] bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-300 hover:text-zinc-100 px-2.5 py-1.5 rounded-full border border-zinc-700/40 transition-all cursor-pointer"
               >
                 {prompt}
               </button>
@@ -135,24 +128,22 @@ export function ChatPanel({
           </div>
         )}
 
-        {/* Input Form */}
+        {/* Input */}
         <form onSubmit={handleSubmit} className="relative flex items-center">
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             disabled={isGenerating}
-            placeholder="Napište odpověď nebo dotaz k článku smlouvy..."
-            id="chat-input-field"
-            className="w-full pl-4 pr-12 py-3 bg-gray-50 focus:bg-white dark:bg-gray-900/50 dark:focus:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 disabled:opacity-50"
+            placeholder="Napište odpověď..."
+            className="w-full pl-4 pr-12 py-2.5 bg-zinc-800/60 text-sm text-zinc-100 placeholder-zinc-500 border border-zinc-700/50 rounded-xl focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 disabled:opacity-50 transition-all"
           />
           <button
             type="submit"
             disabled={!inputValue.trim() || isGenerating}
-            id="btn-send-message"
-            className="absolute right-2 p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors disabled:opacity-40 disabled:hover:bg-emerald-600 cursor-pointer"
+            className="absolute right-1.5 p-2 bg-gold/80 hover:bg-gold text-zinc-950 rounded-lg transition-all disabled:opacity-30 disabled:hover:bg-gold/80 cursor-pointer"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-3.5 h-3.5" />
           </button>
         </form>
       </div>

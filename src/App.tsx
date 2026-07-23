@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { AppHeader } from './components/AppHeader';
 import { DocumentSelection } from './components/DocumentSelection';
@@ -9,8 +9,66 @@ import { FieldsEditorPanel } from './components/FieldsEditorPanel';
 import { SettingsModal } from './components/SettingsModal';
 import { ContractType, Message, ContractFields, RiskAnalysisResult } from './types';
 import { getDefaultFields, getContractTitle, generateContractHTML } from './lib/templateGenerator';
-import { ShieldCheck, MessageSquare, AlertCircle, Sparkles, Edit3 } from 'lucide-react';
+import { ShieldCheck, MessageSquare, Edit3, Sparkles } from 'lucide-react';
 
+// ─── Smart Suggestions Engine ────────────────────────────────────────────────
+type SuggestionContext = {
+  contractType: ContractType;
+  fields: ContractFields;
+  messages: Message[];
+  lastAssistantMsg: string;
+};
+
+function generateSmartSuggestions(ctx: SuggestionContext): string[] {
+  const { contractType, fields, lastAssistantMsg } = ctx;
+
+  // Detect if we're in early stage (first few messages)
+  const isEarlyStage = ctx.messages.length <= 3;
+
+  // Detect if user just asked a question
+  const isQuestion = lastAssistantMsg.includes('?');
+
+  // Detect if we're in demo data mode
+  const hasDemoData = Object.values(fields).some(v => 
+    typeof v === 'string' && (v.includes('2 500 000') || v.includes('150 000') || v.includes('55 hodin'))
+  );
+
+  // Detect if all fields are filled
+  const targetKeys = contractType === 'nda'
+    ? ['poskytovatel', 'prijemce', 'predmet_tajemstvi', 'smluvni_pokuta', 'doba_platnosti', 'rozhodne_pravo']
+    : contractType === 'rent'
+    ? ['pronajimatel', 'najemce', 'predmet_najmu', 'vyska_najemneho', 'poplatky_sluzby', 'vratna_kauce', 'vypovedni_lhuta', 'datum_zacatku']
+    : ['zamestnavatel', 'zamestnanec', 'pracovni_pozice', 'misto_vykonu', 'datum_nastupu', 'mzda', 'zkusebni_doba', 'pracovni_doba'];
+
+  const filledCount = targetKeys.filter(k => fields[k as keyof ContractFields]?.trim()).length;
+  const allFilled = filledCount === targetKeys.length;
+
+  // ── Context-aware suggestions ──
+  if (hasDemoData) {
+    return ['🔍 Analyzovat rizika smlouvy', '⚡ Opravit všechny chyby', '📋 Srovnání s běžnou praxí'];
+  }
+
+  if (allFilled) {
+    return ['🔍 Analyzovat rizika smlouvy', '📥 Stáhnout jako text', '🔄 Začít znovu s jiným typem'];
+  }
+
+  if (isEarlyStage && isQuestion) {
+    return ['💡 Použít doporučenou hodnotu', '❓ Vysvětlit tento pojem', '⏭️ Přeskočit a zeptat se později'];
+  }
+
+  if (isEarlyStage) {
+    return ['✅ Ano, pokračovat', '❓ Vysvětlit podrobněji', '📋 Načíst vzorová data'];
+  }
+
+  // Mid-stage — suggest next field or risk check
+  if (filledCount >= targetKeys.length / 2) {
+    return ['📝 Upravit ručně v editoru', '🔍 Předběžná kontrola rizik', '❓ Mám dotaz k ustanovení'];
+  }
+
+  return ['✅ Rozumím, pokračovat', '❓ Vysvětlit', '📋 Načíst demo data'];
+}
+
+// ─── App Component ────────────────────────────────────────────────────────────
 export default function App() {
   const [contractType, setContractType] = useState<ContractType | null>(null);
   const [fields, setFields] = useState<ContractFields>(() => getDefaultFields('nda'));
@@ -18,16 +76,9 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [nextSuggestedPrompts, setNextSuggestedPrompts] = useState<string[]>([]);
   const [highlightField, setHighlightField] = useState<string | undefined>(undefined);
-  
-  // Theme switcher state
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('theme');
-      if (saved === 'dark' || saved === 'light') return saved;
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    return 'light';
-  });
+
+  // Theme — default dark
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -39,55 +90,47 @@ export default function App() {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const handleToggleTheme = () => {
+  const handleToggleTheme = useCallback(() => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  };
+  }, []);
 
-  // Model & settings configuration
-  const [selectedModel, setSelectedModel] = useState<string>('gemini-3.6-flash');
+  // Model — deepseek-v4-flash as primary
+  const [selectedModel, setSelectedModel] = useState<string>('deepseek-v4-flash');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  
-  // Risk analysis & Tabs state
+
+  // Risk analysis
   const [riskAnalysis, setRiskAnalysis] = useState<RiskAnalysisResult | null>(null);
   const [isAnalyzingRisks, setIsAnalyzingRisks] = useState(false);
   const [leftTab, setLeftTab] = useState<'chat' | 'editor' | 'risk'>('chat');
 
-  // Initialize a new contract drafting session
-  const handleSelectContract = (type: ContractType) => {
+  // ── Initialize contract session ──
+  const handleSelectContract = useCallback((type: ContractType) => {
     setContractType(type);
     const initialFields = getDefaultFields(type);
     setFields(initialFields);
     setRiskAnalysis(null);
     setLeftTab('chat');
 
-    // Initial greeting customized for selected contract
     let greeting = '';
-    let suggestions: string[] = [];
-    
     if (type === 'nda') {
-      greeting = 'Vítejte v DocuGenius AI! Pomohu vám sestavit Dohodu o ochraně důvěrných informací (NDA) podle českého práva.\n\nZačneme prvním krokem: Jaké je prosím jméno nebo název firmy Poskytovatele důvěrných informací?';
-      suggestions = ['Inovativní Startup s.r.o.', 'Chci načíst vzorová Demo data', 'Jaká rizika umíš najít?'];
+      greeting = 'Vítejte v DocuGenius AI! Pomohu vám sestavit **Dohodu o ochraně důvěrných informací (NDA)** podle českého práva.\n\nZačneme prvním krokem: **Jaké je prosím jméno nebo název firmy Poskytovatele důvěrných informací?**';
     } else if (type === 'rent') {
-      greeting = 'Dobrý den! Připravíme společně Nájemní smlouvu na byt v souladu s občanským zákoníkem ČR.\n\nNejprve se zeptám: Kdo je Pronajímatelem bytu? Uveďte prosím celé jméno nebo název firmy.';
-      suggestions = ['Jaroslav Bohatý', 'Chci načíst vzorová Demo data', 'Jaké jsou obvyklé podmínky?'];
+      greeting = 'Dobrý den! Připravíme společně **Nájemní smlouvu na byt** v souladu s občanským zákoníkem ČR.\n\nNejprve se zeptám: **Kdo je Pronajímatelem bytu?** Uveďte prosím celé jméno nebo název firmy.';
     } else {
-      greeting = 'Dobrý den! Rád vám pomohu vytvořit profesionální Pracovní smlouvu podle zákoníku práce ČR.\n\nZačněme základním údajem: Jaký je přesný název nebo jméno Zaměstnavatele?';
-      suggestions = ['Rychlá Logistika a.s.', 'Chci načíst vzorová Demo data', 'Co musí obsahovat smlouva?'];
+      greeting = 'Dobrý den! Rád vám pomohu vytvořit profesionální **Pracovní smlouvu** podle zákoníku práce ČR.\n\nZačněme základním údajem: **Jaký je přesný název nebo jméno Zaměstnavatele?**';
     }
 
-    setMessages([
-      {
-        id: 'init',
-        sender: 'assistant',
-        text: greeting,
-        timestamp: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }),
-      }
-    ]);
-    setNextSuggestedPrompts(suggestions);
-  };
+    setMessages([{
+      id: 'init',
+      sender: 'assistant',
+      text: greeting,
+      timestamp: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }),
+    }]);
+    setNextSuggestedPrompts(['✅ Ano, pokračovat', '❓ Vysvětlit podrobněji', '📋 Načíst vzorová data']);
+  }, []);
 
-  // Inject sample data containing legal issues to quickly demonstrate Risk Check
-  const handleLoadDemoData = () => {
+  // ── Load demo data ──
+  const handleLoadDemoData = useCallback(() => {
     if (!contractType) return;
 
     let demoFields: ContractFields;
@@ -99,11 +142,11 @@ export default function App() {
         poskytovatel: 'Inovativní Startup s.r.o.',
         prijemce: 'Vývojář Jan Horký',
         predmet_tajemstvi: 'předání zdrojových kódů a designových podkladů k nové bankovní aplikaci',
-        smluvni_pokuta: '2 500 000 Kč', // Extremely disproportionate penalty
-        doba_platnosti: 'na věčné časy a bez omezení', // Disproportionate duration
-        rozhodne_pravo: 'Čínská lidová republika (rozhodčí soud v Pekingu)', // Highly unfavorable jurisdiction
+        smluvni_pokuta: '2 500 000 Kč',
+        doba_platnosti: 'na věčné časy a bez omezení',
+        rozhodne_pravo: 'Čínská lidová republika (rozhodčí soud v Pekingu)',
       };
-      demoText = 'Načetl jsem pro vás ukázkové podklady pro NDA.\n\nPozor, tato data záměrně obsahují několik vážných právních rizik:\n1. Extrémní smluvní pokuta (2,5 milionu Kč).\n2. Nekonečné trvání mlčenlivosti.\n3. Jurisdikce v Číně.\n\nKlikněte nyní na zelenou záložku „AI Kontrola rizik“ nebo stiskněte tlačítko pro vyhodnocení, abyste viděli, jak s nimi AI naloží!';
+      demoText = 'Načetl jsem ukázková data pro NDA. ⚠️ **Tato data záměrně obsahují právní pasti:**\n\n1. 💰 Extrémní smluvní pokuta (2,5 mil. Kč)\n2. ⏳ Nekonečné trvání mlčenlivosti\n3. 🌏 Jurisdikce v Číně\n\n👉 Přepněte na záložku **AI Kontrola** a uvidíte, jak je AI odhalí!';
     } else if (contractType === 'rent') {
       demoFields = {
         contractType: 'rent',
@@ -112,53 +155,43 @@ export default function App() {
         predmet_najmu: 'Spálená 23, Praha 1 (byt č. 4)',
         vyska_najemneho: '28 000 Kč',
         poplatky_sluzby: '5 500 Kč',
-        vratna_kauce: '150 000 Kč', // Exceeds lawful 3x limit (high risk)
-        vypovedni_lhuta: '1 měsíc pro nájemce, 6 měsíců pro pronajímatele', // Violates civil code minimums (illegal)
+        vratna_kauce: '150 000 Kč',
+        vypovedni_lhuta: '1 měsíc pro nájemce, 6 měsíců pro pronajímatele',
         datum_zacatku: '1. srpna 2026',
       };
-      demoText = 'Připravil jsem vzorová data pro Nájemní smlouvu.\n\nTento draft záměrně obsahuje závažné právní chyby:\n1. Kauce překračující zákonný limit (150 000 Kč).\n2. Nezákonně nastavené výpovědní lhůty (občanský zákoník garantuje minimálně 3 měsíce pro obě strany).\n\nZkuste ihned spustit „AI Kontrolu rizik“ a vyřešit tyto problémy na jeden klik!';
+      demoText = 'Připravil jsem vzorová data pro Nájemní smlouvu. ⚠️ **Obsahuje záměrné chyby:**\n\n1. 💰 Kauce překračující zákonný limit\n2. ⚖️ Nezákonné výpovědní lhůty\n\n👉 Zkuste **AI Kontrolu rizik**!';
     } else {
       demoFields = {
         contractType: 'employment',
         zamestnavatel: 'Rychlá Logistika a.s.',
         zamestnanec: 'Pavel Rychlý',
         pracovni_pozice: 'Kurýr zásilek',
-        misto_vykonu: 'celé území České republiky a Evropské unie', // Unreasonably wide place of performance
+        misto_vykonu: 'celé území České republiky a Evropské unie',
         datum_nastupu: '1. srpna 2026',
         mzda: '18 500 Kč hrubého měsíčně',
-        zkusebni_doba: '6 měsíců zkušební doba', // Unlawful length for regular worker (law limits to 3 months)
-        pracovni_doba: '55 hodin týdně', // Exceeds statutory weekly limits
+        zkusebni_doba: '6 měsíců zkušební doba',
+        pracovni_doba: '55 hodin týdně',
       };
-      demoText = 'Doplnil jsem vzorové hodnoty do Pracovní smlouvy.\n\nTento draft obsahuje doložky, které odporují zákoníku práce ČR:\n1. Zkušební doba 6 měsíců (povolené maximum je 3 měsíce).\n2. Týdenní doba 55 hodin (zákonný limit je 40 hodin).\n3. Absurdně široké místo výkonu práce.\n\nKlikněte nahoře na „AI Kontrola rizik“ k odhalení těchto pastí a opravte je bezpečným ujednáním.';
+      demoText = 'Doplnil jsem vzorové hodnoty do Pracovní smlouvy. ⚠️ **Obsahuje nelegální doložky:**\n\n1. ⏱️ Zkušební doba 6 měsíců (max 3)\n2. 📊 Týdenní doba 55 hodin (max 40)\n3. 🌍 Absurdně široké místo výkonu\n\n👉 Spusťte **AI Kontrolu rizik**!';
     }
 
     setFields(demoFields);
     setMessages(prev => [
       ...prev,
-      {
-        id: Math.random().toString(),
-        sender: 'user',
-        text: 'Chci načíst vzorová Demo data',
-        timestamp: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }),
-      },
-      {
-        id: Math.random().toString(),
-        sender: 'assistant',
-        text: demoText,
-        timestamp: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }),
-      }
+      { id: Math.random().toString(), sender: 'user', text: '📋 Načíst vzorová data', timestamp: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) },
+      { id: Math.random().toString(), sender: 'assistant', text: demoText, timestamp: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) },
     ]);
-    setNextSuggestedPrompts(['Analyzovat rizika smlouvy', 'Jaká je optimální výše pokuty?']);
-  };
+    setNextSuggestedPrompts(['🔍 Analyzovat rizika smlouvy', '⚡ Jaká je optimální výše pokuty?']);
+  }, [contractType]);
 
-  // Send message to Gemini chat endpoint
-  const handleSendMessage = async (text: string) => {
-    if (text.includes('vzorová Demo data') || text.includes('vzorová demo data')) {
+  // ── Send message ──
+  const handleSendMessage = useCallback(async (text: string) => {
+    if (text.includes('vzorová') || text.includes('demo')) {
       handleLoadDemoData();
       return;
     }
 
-    if (text === 'Analyzovat rizika smlouvy') {
+    if (text.includes('Analyzovat rizika') || text.includes('Kontrola rizik')) {
       setLeftTab('risk');
       handleRunRiskAnalysis();
       return;
@@ -179,21 +212,13 @@ export default function App() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contractType,
-          messages: updatedMessages,
-          currentFields: fields,
-          selectedModel,
-        }),
+        body: JSON.stringify({ contractType, messages: updatedMessages, currentFields: fields, selectedModel }),
       });
 
-      if (!response.ok) {
-        throw new Error('Chyba při komunikaci s backendem');
-      }
+      if (!response.ok) throw new Error('Chyba při komunikaci s backendem');
 
       const data = await response.json();
 
-      // Process extracted parameters
       if (data.extractedFields && Object.keys(data.extractedFields).length > 0) {
         setFields(prev => {
           const merged = { ...prev };
@@ -207,7 +232,6 @@ export default function App() {
         });
       }
 
-      // Highlight the updated field
       if (data.lastUpdatedField) {
         setHighlightField(data.lastUpdatedField);
         setTimeout(() => setHighlightField(undefined), 3000);
@@ -221,118 +245,97 @@ export default function App() {
       };
 
       setMessages(prev => [...prev, assistantMsg]);
-      setNextSuggestedPrompts(data.nextSuggestedPrompts || []);
+
+      // Generate smart suggestions based on context
+      const suggestions = generateSmartSuggestions({
+        contractType: contractType!,
+        fields: { ...fields, ...(data.extractedFields || {}) },
+        messages: [...updatedMessages, assistantMsg],
+        lastAssistantMsg: data.reply,
+      });
+      setNextSuggestedPrompts(suggestions);
     } catch (error) {
       console.error(error);
-      setMessages(prev => [
-        ...prev,
-        {
-          id: Math.random().toString(),
-          sender: 'assistant',
-          text: 'Omlouvám se, ale nepodařilo se mi spojit s AI službou. Zkontrolujte prosím připojení k síti a zkuste to znovu.',
-          timestamp: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }),
-        }
-      ]);
+      setMessages(prev => [...prev, {
+        id: Math.random().toString(),
+        sender: 'assistant',
+        text: 'Omlouvám se, nepodařilo se spojit s AI službou. Zkuste to prosím znovu.',
+        timestamp: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }),
+      }]);
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [contractType, messages, fields, selectedModel, handleLoadDemoData]);
 
-  // Run AI Risk Check
-  const handleRunRiskAnalysis = async () => {
+  // ── Risk analysis ──
+  const handleRunRiskAnalysis = useCallback(async () => {
+    if (!contractType) return;
     setIsAnalyzingRisks(true);
     setRiskAnalysis(null);
 
-    const contractHTML = generateContractHTML(contractType!, fields);
+    const contractHTML = generateContractHTML(contractType, fields);
 
     try {
       const response = await fetch('/api/analyze-risks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contractType,
-          contractHTML,
-          selectedModel,
-        }),
+        body: JSON.stringify({ contractType, contractHTML, selectedModel }),
       });
 
-      if (!response.ok) {
-        throw new Error('Chyba při analýze rizik');
-      }
+      if (!response.ok) throw new Error('Chyba při analýze rizik');
 
       const data = await response.json();
       setRiskAnalysis(data);
     } catch (err) {
       console.error(err);
-      alert('Chyba při analýze rizik. Ujistěte se, že vybraný model je správně nakonfigurován.');
+      alert('Chyba při analýze rizik.');
     } finally {
       setIsAnalyzingRisks(false);
     }
-  };
+  }, [contractType, fields, selectedModel]);
 
-  // Apply safer legal phrasing replacement
-  const handleApplyRiskFix = (riskId: string, targetText: string, replacementText: string) => {
+  // ── Apply risk fix ──
+  const handleApplyRiskFix = useCallback((riskId: string, targetText: string, replacementText: string) => {
     setFields(prev => {
       const updated = { ...prev };
-      let found = false;
-
       for (const k in updated) {
         const key = k as keyof ContractFields;
         if (key === 'contractType') continue;
         const val = updated[key];
         if (typeof val === 'string' && val.includes(targetText)) {
           updated[key] = val.replace(targetText, replacementText);
-          found = true;
           setHighlightField(key);
           setTimeout(() => setHighlightField(undefined), 3000);
           break;
         }
       }
-
-      // If exact substring didn't match perfectly, let's do a soft update 
-      if (!found) {
-        // E.g. find field by name mapping or if it contains any subset
-        for (const k in updated) {
-          const key = k as keyof ContractFields;
-          if (key === 'contractType') continue;
-          const val = updated[key];
-          if (typeof val === 'string' && (targetText.includes(val) || val.includes(targetText.split(' ')[0]))) {
-            updated[key] = replacementText;
-            setHighlightField(key);
-            setTimeout(() => setHighlightField(undefined), 3000);
-            break;
-          }
-        }
-      }
-
       return updated;
     });
 
-    // Mark risk as resolved in the list
     if (riskAnalysis) {
-      const updatedRisks = riskAnalysis.risks.map(r => 
+      const updatedRisks = riskAnalysis.risks.map(r =>
         r.id === riskId ? { ...r, applied: true } : r
       );
       setRiskAnalysis({
         ...riskAnalysis,
         risks: updatedRisks,
-        safetyScore: Math.min(100, riskAnalysis.safetyScore + 15), // Increase safety score dynamically!
+        safetyScore: Math.min(100, riskAnalysis.safetyScore + 15),
       });
     }
-  };
+  }, [riskAnalysis]);
 
-  const handleResetContract = () => {
-    if (window.confirm('Opravdu chcete vymazat všechny zadané údaje a začít rozhovor znovu?')) {
+  const handleResetContract = useCallback(() => {
+    if (window.confirm('Opravdu chcete vymazat všechny údaje a začít znovu?')) {
       handleSelectContract(contractType!);
     }
-  };
+  }, [contractType, handleSelectContract]);
 
   return (
-    <div className="min-h-screen bg-gray-50/30 dark:bg-gray-950 font-sans text-gray-900 dark:text-gray-100 flex flex-col transition-colors">
-      <AppHeader 
-        contractType={contractType} 
-        onBackToSelection={() => setContractType(null)} 
-        onResetContract={handleResetContract} 
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans flex flex-col transition-colors">
+      <AppHeader
+        contractType={contractType}
+        onBackToSelection={() => setContractType(null)}
+        onResetContract={handleResetContract}
         selectedModel={selectedModel}
         onOpenSettings={() => setIsSettingsOpen(true)}
         theme={theme}
@@ -343,51 +346,37 @@ export default function App() {
         {!contractType ? (
           <DocumentSelection onSelect={handleSelectContract} />
         ) : (
-          <div className="grid lg:grid-cols-12 gap-6 items-start h-full">
-            {/* Left Side: Chat Panel, Fields Editor Panel, or Risk Analysis Panel */}
+          <div className="grid lg:grid-cols-12 gap-5 items-start h-full">
+            {/* Left Panel */}
             <div className="lg:col-span-5 flex flex-col h-full space-y-4">
-              {/* Selector Tabs for Left Screen */}
-              <div className="flex bg-gray-100 dark:bg-gray-900 p-1 rounded-xl font-bold text-xs shadow-inner">
+              {/* Apple-style tab bar */}
+              <div className="apple-tabs">
                 <button
                   onClick={() => setLeftTab('chat')}
-                  className={`flex-1 py-2.5 rounded-lg flex items-center justify-center gap-1 transition-colors cursor-pointer ${
-                    leftTab === 'chat'
-                      ? 'bg-white dark:bg-gray-850 text-gray-900 dark:text-white shadow-sm'
-                      : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
-                  }`}
+                  className={`apple-tab ${leftTab === 'chat' ? 'active' : ''}`}
                 >
-                  <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                  <MessageSquare className="w-3.5 h-3.5 inline mr-1.5" />
                   Průvodce
                 </button>
                 <button
                   onClick={() => setLeftTab('editor')}
-                  className={`flex-1 py-2.5 rounded-lg flex items-center justify-center gap-1 transition-colors cursor-pointer ${
-                    leftTab === 'editor'
-                      ? 'bg-white dark:bg-gray-850 text-gray-900 dark:text-white shadow-sm'
-                      : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
-                  }`}
+                  className={`apple-tab ${leftTab === 'editor' ? 'active' : ''}`}
                 >
-                  <Edit3 className="w-3.5 h-3.5 text-sky-600" />
-                  Úprava údajů
+                  <Edit3 className="w-3.5 h-3.5 inline mr-1.5" />
+                  Údaje
                 </button>
                 <button
                   onClick={() => setLeftTab('risk')}
-                  id="tab-risk-analysis"
-                  className={`flex-1 py-2.5 rounded-lg flex items-center justify-center gap-1 transition-colors cursor-pointer relative ${
-                    leftTab === 'risk'
-                      ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
-                  }`}
+                  className={`apple-tab ${leftTab === 'risk' ? 'active' : ''}`}
                 >
-                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+                  <ShieldCheck className="w-3.5 h-3.5 inline mr-1.5" />
                   AI Kontrola
                   {riskAnalysis && riskAnalysis.risks.filter(r => !r.applied).length > 0 && (
-                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+                    <span className="ml-1.5 w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse inline-block" />
                   )}
                 </button>
               </div>
 
-              {/* Panel Renderer */}
               {leftTab === 'chat' && (
                 <ChatPanel
                   messages={messages}
@@ -398,7 +387,6 @@ export default function App() {
                   contractType={contractType}
                 />
               )}
-
               {leftTab === 'editor' && (
                 <FieldsEditorPanel
                   contractType={contractType}
@@ -408,7 +396,6 @@ export default function App() {
                   highlightField={highlightField}
                 />
               )}
-
               {leftTab === 'risk' && (
                 <RiskAnalysisPanel
                   analysis={riskAnalysis}
@@ -420,7 +407,7 @@ export default function App() {
               )}
             </div>
 
-            {/* Right Side: Split-Screen Document Preview */}
+            {/* Right Panel — Document Preview */}
             <div className="lg:col-span-7 h-full">
               <DocumentPreview
                 contractType={contractType}
