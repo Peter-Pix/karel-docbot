@@ -107,7 +107,7 @@ export function DocumentPreview({
           <div className="max-w-2xl mx-auto p-8 md:p-10 bg-zinc-900 border border-zinc-800 shadow-xl rounded-sm min-h-[842px] relative">
             {/* Watermark */}
             <div className="absolute top-3 right-3 text-[8px] uppercase font-semibold tracking-widest text-gold/20 border border-gold/10 px-2 py-0.5 rounded">
-              DocuGenius AI
+              DocBot
             </div>
             <div
               className="prose prose-invert max-w-none text-xs leading-relaxed text-zinc-200 [&_h1]:text-base [&_h1]:font-bold [&_h1]:text-center [&_h1]:uppercase [&_h1]:mb-6 [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-5 [&_h2]:mb-2 [&_h2]:border-b [&_h2]:border-zinc-700 [&_h2]:pb-1 [&_p]:text-justify [&_p]:mb-2"

@@ -113,7 +113,7 @@ export default function App() {
 
     let greeting = '';
     if (type === 'nda') {
-      greeting = 'Vítejte v DocuGenius AI! Pomohu vám sestavit **Dohodu o ochraně důvěrných informací (NDA)** podle českého práva.\n\nZačneme prvním krokem: **Jaké je prosím jméno nebo název firmy Poskytovatele důvěrných informací?**';
+      greeting = 'Vítejte v DocBot! Pomohu vám sestavit **Dohodu o ochraně důvěrných informací (NDA)** podle českého práva.\n\nZačneme prvním krokem: **Jaké je prosím jméno nebo název firmy Poskytovatele důvěrných informací?**';
     } else if (type === 'rent') {
       greeting = 'Dobrý den! Připravíme společně **Nájemní smlouvu na byt** v souladu s občanským zákoníkem ČR.\n\nNejprve se zeptám: **Kdo je Pronajímatelem bytu?** Uveďte prosím celé jméno nebo název firmy.';
     } else {

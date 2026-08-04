@@ -102,7 +102,7 @@ export function ChatPanel({
             </div>
             <div className="bg-zinc-800/80 border border-zinc-700/40 px-4 py-3 rounded-2xl rounded-tl-sm flex items-center gap-2.5">
               <Loader2 className="w-3.5 h-3.5 animate-spin text-gold" />
-              <span className="text-[11px] text-zinc-400">DocuGenius zpracovává...</span>
+              <span className="text-[11px] text-zinc-400">DocBot zpracovává...</span>
             </div>
           </div>
         )}

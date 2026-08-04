@@ -41,7 +41,7 @@ export function AppHeader({
                 <Scale className="w-4 h-4" />
               </div>
               <span className="font-bold text-base tracking-tight text-zinc-100">
-                DocuGenius <span className="text-gold">AI</span>
+                Doc<span className="text-gold">Bot</span>
               </span>
             </div>
           )}
