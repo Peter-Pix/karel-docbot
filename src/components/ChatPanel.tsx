@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Message, ContractFields, ContractType } from '../types';
+import { getFieldKeys } from '../lib/contracts';
 import { Send, Bot, User, Loader2, Sparkles, Zap } from 'lucide-react';
 
 interface ChatPanelProps {
@@ -35,10 +36,7 @@ export function ChatPanel({
 
   // Progress calculation
   const getProgress = () => {
-    const ndaKeys: (keyof ContractFields)[] = ['poskytovatel', 'prijemce', 'predmet_tajemstvi', 'smluvni_pokuta', 'doba_platnosti', 'rozhodne_pravo'];
-    const rentKeys: (keyof ContractFields)[] = ['pronajimatel', 'najemce', 'predmet_najmu', 'vyska_najemneho', 'poplatky_sluzby', 'vratna_kauce', 'vypovedni_lhuta', 'datum_zacatku'];
-    const empKeys: (keyof ContractFields)[] = ['zamestnavatel', 'zamestnanec', 'pracovni_pozice', 'misto_vykonu', 'datum_nastupu', 'mzda', 'zkusebni_doba', 'pracovni_doba'];
-    const targetKeys = contractType === 'nda' ? ndaKeys : contractType === 'rent' ? rentKeys : empKeys;
+    const targetKeys = getFieldKeys(contractType);
     const filledCount = targetKeys.filter(k => currentFields[k] && currentFields[k]?.trim() !== '').length;
     return { filledCount, totalCount: targetKeys.length, percentage: Math.round((filledCount / targetKeys.length) * 100) };
   };

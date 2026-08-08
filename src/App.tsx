@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { AppHeader } from './components/AppHeader';
 import { DocumentSelection } from './components/DocumentSelection';
@@ -7,8 +7,10 @@ import { DocumentPreview } from './components/DocumentPreview';
 import { RiskAnalysisPanel } from './components/RiskAnalysisPanel';
 import { FieldsEditorPanel } from './components/FieldsEditorPanel';
 import { SettingsModal } from './components/SettingsModal';
+import { useToast } from './components/Toast';
 import { ContractType, Message, ContractFields, RiskAnalysisResult } from './types';
 import { getDefaultFields, getContractTitle, generateContractHTML } from './lib/templateGenerator';
+import { getFieldKeys } from './lib/contracts';
 import { ShieldCheck, MessageSquare, Edit3, Sparkles } from 'lucide-react';
 
 // ─── Smart Suggestions Engine ────────────────────────────────────────────────
@@ -34,11 +36,7 @@ function generateSmartSuggestions(ctx: SuggestionContext): string[] {
   );
 
   // Detect if all fields are filled
-  const targetKeys = contractType === 'nda'
-    ? ['poskytovatel', 'prijemce', 'predmet_tajemstvi', 'smluvni_pokuta', 'doba_platnosti', 'rozhodne_pravo']
-    : contractType === 'rent'
-    ? ['pronajimatel', 'najemce', 'predmet_najmu', 'vyska_najemneho', 'poplatky_sluzby', 'vratna_kauce', 'vypovedni_lhuta', 'datum_zacatku']
-    : ['zamestnavatel', 'zamestnanec', 'pracovni_pozice', 'misto_vykonu', 'datum_nastupu', 'mzda', 'zkusebni_doba', 'pracovni_doba'];
+  const targetKeys = getFieldKeys(contractType);
 
   const filledCount = targetKeys.filter(k => fields[k as keyof ContractFields]?.trim()).length;
   const allFilled = filledCount === targetKeys.length;
@@ -70,6 +68,7 @@ function generateSmartSuggestions(ctx: SuggestionContext): string[] {
 
 // ─── App Component ────────────────────────────────────────────────────────────
 export default function App() {
+  const { showToast } = useToast();
   const [contractType, setContractType] = useState<ContractType | null>(null);
   const [fields, setFields] = useState<ContractFields>(() => getDefaultFields('nda'));
   const [messages, setMessages] = useState<Message[]>([]);
@@ -102,6 +101,12 @@ export default function App() {
   const [riskAnalysis, setRiskAnalysis] = useState<RiskAnalysisResult | null>(null);
   const [isAnalyzingRisks, setIsAnalyzingRisks] = useState(false);
   const [leftTab, setLeftTab] = useState<'chat' | 'editor' | 'risk'>('chat');
+
+  // Memoized contract HTML for risk analysis (avoids regenerating on every render)
+  const contractHTML = useMemo(() => {
+    if (!contractType) return '';
+    return generateContractHTML(contractType, fields);
+  }, [contractType, fields]);
 
   // ── Initialize contract session ──
   const handleSelectContract = useCallback((type: ContractType) => {
@@ -256,6 +261,7 @@ export default function App() {
       setNextSuggestedPrompts(suggestions);
     } catch (error) {
       console.error(error);
+      showToast('error', 'AI služba je nedostupná. Zkontrolujte připojení a zkuste to znovu.');
       setMessages(prev => [...prev, {
         id: Math.random().toString(),
         sender: 'assistant',
@@ -273,8 +279,6 @@ export default function App() {
     setIsAnalyzingRisks(true);
     setRiskAnalysis(null);
 
-    const contractHTML = generateContractHTML(contractType, fields);
-
     try {
       const response = await fetch('/api/analyze-risks', {
         method: 'POST',
@@ -286,13 +290,14 @@ export default function App() {
 
       const data = await response.json();
       setRiskAnalysis(data);
+      showToast('info', `Analýza dokončena: ${data.risks?.length || 0} rizik nalezeno. Skóre: ${data.safetyScore}%.`);
     } catch (err) {
       console.error(err);
-      alert('Chyba při analýze rizik.');
+      showToast('error', 'Nepodařilo se spojit s AI službou. Zkuste to prosím znovu za chvíli.');
     } finally {
       setIsAnalyzingRisks(false);
     }
-  }, [contractType, fields, selectedModel]);
+  }, [contractType, contractHTML, selectedModel, showToast]);
 
   // ── Apply risk fix ──
   const handleApplyRiskFix = useCallback((riskId: string, targetText: string, replacementText: string) => {
@@ -322,7 +327,9 @@ export default function App() {
         safetyScore: Math.min(100, riskAnalysis.safetyScore + 15),
       });
     }
-  }, [riskAnalysis]);
+
+    showToast('success', 'Oprava byla úspěšně aplikována na smlouvu.');
+  }, [riskAnalysis, showToast]);
 
   const handleResetContract = useCallback(() => {
     if (window.confirm('Opravdu chcete vymazat všechny údaje a začít znovu?')) {

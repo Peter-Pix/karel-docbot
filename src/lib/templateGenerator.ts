@@ -1,82 +1,16 @@
 import { ContractType, ContractFields } from '../types';
+import { getFieldLabel, getDefaultFieldsFromSchema, getContractTitleFromSchema } from './contracts';
 
 export function getFieldNameLabel(field: keyof ContractFields): string {
-  const labels: Record<string, string> = {
-    poskytovatel: 'Poskytovatel informací',
-    prijemce: 'Příjemce informací',
-    predmet_tajemstvi: 'Předmět tajemství / Účel',
-    smluvni_pokuta: 'Smluvní pokuta',
-    doba_platnosti: 'Doba platnosti / Trvání',
-    rozhodne_pravo: 'Rozhodné právo',
-    
-    pronajimatel: 'Pronajímatel',
-    najemce: 'Nájemce',
-    predmet_najmu: 'Předmět nájmu / Adresa',
-    vyska_najemneho: 'Výše měsíčního nájemného',
-    poplatky_sluzby: 'Zálohy na služby a energie',
-    vratna_kauce: 'Vratná kauce (Jistota)',
-    vypovedni_lhuta: 'Výpovědní lhůta',
-    datum_zacatku: 'Datum začátku nájmu',
-    
-    zamestnavatel: 'Zaměstnavatel',
-    zamestnanec: 'Zaměstnanec',
-    pracovni_pozice: 'Pracovní pozice',
-    misto_vykonu: 'Místo výkonu práce',
-    datum_nastupu: 'Datum nástupu do práce',
-    mzda: 'Mzda (Hrubý měsíční plat)',
-    zkusebni_doba: 'Zkušební doba',
-    pracovni_doba: 'Týdenní pracovní doba',
-  };
-  return labels[field as string] || (field as string);
+  return getFieldLabel(field);
 }
 
 export function getDefaultFields(type: ContractType): ContractFields {
-  if (type === 'nda') {
-    return {
-      contractType: 'nda',
-      poskytovatel: '',
-      prijemce: '',
-      predmet_tajemstvi: '',
-      smluvni_pokuta: '50 000 Kč',
-      doba_platnosti: '3 roky od podpisu',
-      rozhodne_pravo: 'Česká republika (české právo)',
-    };
-  } else if (type === 'rent') {
-    return {
-      contractType: 'rent',
-      pronajimatel: '',
-      najemce: '',
-      predmet_najmu: '',
-      vyska_najemneho: '',
-      poplatky_sluzby: '',
-      vratna_kauce: '',
-      vypovedni_lhuta: '3 měsíce',
-      datum_zacatku: '',
-    };
-  } else {
-    return {
-      contractType: 'employment',
-      zamestnavatel: '',
-      zamestnanec: '',
-      pracovni_pozice: '',
-      misto_vykonu: '',
-      datum_nastupu: '',
-      mzda: '',
-      zkusebni_doba: '3 měsíce',
-      pracovni_doba: '40 hodin týdně',
-    };
-  }
+  return getDefaultFieldsFromSchema(type);
 }
 
 export function getContractTitle(type: ContractType): string {
-  switch (type) {
-    case 'nda':
-      return 'Dohoda o ochraně důvěrných informací (NDA)';
-    case 'rent':
-      return 'Nájemní smlouva na byt';
-    case 'employment':
-      return 'Pracovní smlouva';
-  }
+  return getContractTitleFromSchema(type);
 }
 
 export function generateContractHTML(
