@@ -6,6 +6,7 @@ import { DocumentPreview } from './components/DocumentPreview';
 import { RiskAnalysisPanel } from './components/RiskAnalysisPanel';
 import { FieldsEditorPanel } from './components/FieldsEditorPanel';
 import { SettingsModal } from './components/SettingsModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useToast } from './components/Toast';
 import { ContractType, Message, ContractFields, RiskAnalysisResult } from './types';
 import { getDefaultFields, getContractTitle, generateContractHTML } from './lib/templateGenerator';
@@ -350,7 +351,9 @@ export default function App() {
 
       <main className="flex-grow w-full max-w-7xl mx-auto px-4 py-6 md:py-8 flex flex-col">
         {!contractType ? (
-          <DocumentSelection onSelect={handleSelectContract} />
+          <ErrorBoundary label="výběr smlouvy">
+            <DocumentSelection onSelect={handleSelectContract} />
+          </ErrorBoundary>
         ) : (
           <div className="grid lg:grid-cols-12 gap-5 items-start h-full">
             {/* Left Panel */}
@@ -384,42 +387,50 @@ export default function App() {
               </div>
 
               {leftTab === 'chat' && (
-                <ChatPanel
-                  messages={messages}
-                  onSendMessage={handleSendMessage}
-                  isGenerating={isGenerating}
-                  nextSuggestedPrompts={nextSuggestedPrompts}
-                  currentFields={fields}
-                  contractType={contractType}
-                />
+                <ErrorBoundary label="chat">
+                  <ChatPanel
+                    messages={messages}
+                    onSendMessage={handleSendMessage}
+                    isGenerating={isGenerating}
+                    nextSuggestedPrompts={nextSuggestedPrompts}
+                    currentFields={fields}
+                    contractType={contractType}
+                  />
+                </ErrorBoundary>
               )}
               {leftTab === 'editor' && (
-                <FieldsEditorPanel
-                  contractType={contractType}
-                  fields={fields}
-                  onUpdateFields={(updated) => setFields(prev => ({ ...prev, ...updated }))}
-                  onLoadDemoData={handleLoadDemoData}
-                  highlightField={highlightField}
-                />
+                <ErrorBoundary label="údaje">
+                  <FieldsEditorPanel
+                    contractType={contractType}
+                    fields={fields}
+                    onUpdateFields={(updated) => setFields(prev => ({ ...prev, ...updated }))}
+                    onLoadDemoData={handleLoadDemoData}
+                    highlightField={highlightField}
+                  />
+                </ErrorBoundary>
               )}
               {leftTab === 'risk' && (
-                <RiskAnalysisPanel
-                  analysis={riskAnalysis}
-                  isLoading={isAnalyzingRisks}
-                  onRunAnalysis={handleRunRiskAnalysis}
-                  onApplyFix={handleApplyRiskFix}
-                  onClose={() => setLeftTab('chat')}
-                />
+                <ErrorBoundary label="AI kontrola">
+                  <RiskAnalysisPanel
+                    analysis={riskAnalysis}
+                    isLoading={isAnalyzingRisks}
+                    onRunAnalysis={handleRunRiskAnalysis}
+                    onApplyFix={handleApplyRiskFix}
+                    onClose={() => setLeftTab('chat')}
+                  />
+                </ErrorBoundary>
               )}
             </div>
 
             {/* Right Panel — Document Preview */}
             <div className="lg:col-span-7 h-full">
-              <DocumentPreview
-                contractType={contractType}
-                fields={fields}
-                highlightField={highlightField}
-              />
+              <ErrorBoundary label="náhled smlouvy">
+                <DocumentPreview
+                  contractType={contractType}
+                  fields={fields}
+                  highlightField={highlightField}
+                />
+              </ErrorBoundary>
             </div>
           </div>
         )}
