@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { AppHeader } from './components/AppHeader';
 import { DocumentSelection } from './components/DocumentSelection';
 import { ChatPanel } from './components/ChatPanel';
@@ -75,23 +75,6 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [nextSuggestedPrompts, setNextSuggestedPrompts] = useState<string[]>([]);
   const [highlightField, setHighlightField] = useState<string | undefined>(undefined);
-
-  // Theme — default dark
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const handleToggleTheme = useCallback(() => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  }, []);
 
   // Model — deepseek-v4-flash as primary
   const [selectedModel, setSelectedModel] = useState<string>('deepseek-v4-flash');
@@ -345,8 +328,6 @@ export default function App() {
         onResetContract={handleResetContract}
         selectedModel={selectedModel}
         onOpenSettings={() => setIsSettingsOpen(true)}
-        theme={theme}
-        onToggleTheme={handleToggleTheme}
       />
 
       <main className="flex-grow w-full max-w-7xl mx-auto px-4 py-6 md:py-8 flex flex-col">
