@@ -4,6 +4,13 @@
 
 import http from 'node:http';
 import url from 'node:url';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env.local (same convention as Vite)
+dotenv.config({ path: '.env.local' });
+if (!process.env.OLLAMA_API_KEY) {
+  dotenv.config({ path: '.env' });
+}
 
 // @ts-ignore dynamic import ESM from TS files
 const handlers: Record<string, (req: any, res: any) => void | Promise<void>> = {};
@@ -102,6 +109,12 @@ const server = http.createServer(async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+const apiKey = process.env.OLLAMA_API_KEY;
+if (!apiKey) {
+  console.warn('[dev-server] WARNING: OLLAMA_API_KEY not found in .env.local or .env');
+} else {
+  console.log(`[dev-server] OLLAMA_API_KEY loaded: ${apiKey.slice(0, 4)}...${apiKey.slice(-4)}`);
+}
 server.listen(PORT, () => {
   console.log(`[dev-server] API server running at http://localhost:${PORT}/api`);
 });

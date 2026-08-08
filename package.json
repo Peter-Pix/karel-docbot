@@ -27,6 +27,7 @@
     "@types/react-dom": "^19.2.3",
     "@vercel/node": "^5.8.26",
     "concurrently": "^10.0.4",
+    "dotenv": "^17.4.2",
     "playwright": "^1.62.1",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.23.11",
