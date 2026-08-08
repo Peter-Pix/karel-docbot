@@ -37,7 +37,7 @@ import {
   MyProfile,
   ParsedEntityData,
 } from '../lib/entities';
-import { SmartEntryPanel } from './SmartEntryPanel';
+import { MultiInputComposer } from './MultiInputComposer';
 
 interface AdaptiveFlowWizardProps {
   contractType: ContractType;
@@ -296,13 +296,11 @@ function StepContent(props: StepContentProps) {
   const { step, entityStore, setCurrentEntityDraft, currentEntityDraft } = props;
 
   if (currentEntityDraft) {
-    // SmartEntryPanel pro rozpracovaný entitní draft
+    // MultiInputComposer pro rozpracovaný entitní draft
     const isMe = currentEntityDraft.mode === 'me';
     return (
-      <SmartEntryPanel
+      <MultiInputComposer
         mode={currentEntityDraft.mode}
-        recentItems={isMe ? [] : entityStore.store?.counterparties || []}
-        onSelectRecent={props.onSelectExistingCp}
         onConfirm={props.onEntityConfirm}
         onCancel={() => setCurrentEntityDraft(null)}
       />

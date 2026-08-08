@@ -121,8 +121,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Sestav prompt
-    const systemPrompt = buildParserSystemPrompt();
-    const userPrompt = buildParserUserPrompt(inputText, contractType);
+    const systemPrompt = buildParserSystemPrompt('counterparty');
+    const userPrompt = buildParserUserPrompt(inputText, contractType, 'counterparty');
 
     try {
       const responseText = await queryOllamaVision(
