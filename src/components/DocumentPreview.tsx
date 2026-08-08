@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ContractType, ContractFields } from '../types';
 import { generateContractHTML, getContractTitle } from '../lib/templateGenerator';
+import { sanitizeHTML } from '../lib/sanitize';
 import { Copy, Download, Printer, FileText, Check, Eye, Code2 } from 'lucide-react';
 
 interface DocumentPreviewProps {
@@ -17,7 +18,10 @@ export function DocumentPreview({
   const [activeTab, setActiveTab] = useState<'preview' | 'raw'>('preview');
   const [isCopied, setIsCopied] = useState(false);
 
-  const contractHTML = generateContractHTML(contractType, fields, highlightField);
+  const contractHTML = useMemo(() => {
+    const raw = generateContractHTML(contractType, fields, highlightField);
+    return sanitizeHTML(raw);
+  }, [contractType, fields, highlightField]);
 
   const getPlainText = () => {
     const tempDiv = document.createElement('div');
