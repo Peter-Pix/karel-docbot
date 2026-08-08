@@ -1,6 +1,5 @@
 // src/components/AdaptiveFlowWizard.tsx
-// Nový adaptivní průvodce, který řídí celou cestu uživatele.
-// Pravidlo: Uživatel vždycky ví, kde je, co se po něm chce, a za jak dlouho bude hotovo.
+// Nový adaptivní průvodce — Apple-style, dark.
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -14,10 +13,6 @@ import {
   User,
   Building2,
   Hammer,
-  Calendar,
-  DollarSign,
-  ShieldCheck,
-  Eye,
   Download,
 } from 'lucide-react';
 import { ContractType } from '../types';
@@ -34,25 +29,21 @@ import {
 import {
   Counterparty,
   WorkTemplate,
-  MyProfile,
   ParsedEntityData,
 } from '../lib/entities';
 import { MultiInputComposer } from './MultiInputComposer';
 
 interface AdaptiveFlowWizardProps {
   contractType: ContractType;
-  // Callbacky pro plnění fields do App.tsx (kvůli preview)
   onFieldsUpdate: (updates: Record<string, string>) => void;
   currentFields: Record<string, string>;
   onClose: () => void;
 }
 
-// Mapování flow steps na ContractFields klíče
-// (Abychom mohli plnit smlouvu z flow)
 const STEP_TO_FIELDS: Record<FlowStepId, string[]> = {
   intro: [],
-  identify_me: [], // aktualizuje myProfile, ne contract fields
-  identify_counterparty: [], // aktualizuje counterparty entitu
+  identify_me: [],
+  identify_counterparty: [],
   select_counterparty: [],
   work_subject: ['predmet_dila'],
   work_template: [],
@@ -81,7 +72,6 @@ export function AdaptiveFlowWizard({
   const steps = useMemo(() => getStepsForContract(contractType), [contractType]);
   const currentStepDef = steps.find((s) => s.id === flowState.currentStep) ?? steps[0];
 
-  // Progress
   const progress = useMemo(() => {
     const completed = flowState.completedSteps.length;
     const total = steps.filter((s) => s.required).length;
@@ -90,7 +80,6 @@ export function AdaptiveFlowWizard({
 
   const etaMinutes = Math.ceil(flowState.estimatedRemainingSeconds / 60);
 
-  // ── Přeskoč krok: identify_me pokud mám profil
   useEffect(() => {
     if (!entityStore.isLoaded) return;
     const autoSkips = computeAutoSkips(entityStore.store!, contractType);
@@ -102,18 +91,15 @@ export function AdaptiveFlowWizard({
     }
   }, [entityStore.isLoaded, contractType]);
 
-  // ── Advance po dokončení kroku
   const handleStepComplete = useCallback(() => {
     setFlowState((s) => advanceFlow(s, contractType, entityStore.store!));
   }, [contractType, entityStore.store]);
 
-  // ── Smart entry confirm handler
   const handleEntityConfirm = useCallback(
     (parsed: ParsedEntityData) => {
       if (!currentEntityDraft) return;
       const result = applyParsedData(entityStore.store!, parsed);
 
-      // Ulož změny do storage
       if (currentEntityDraft.mode === 'me' && result.updatedStore.myProfile) {
         entityStore.saveProfile(result.updatedStore.myProfile);
       }
@@ -129,12 +115,10 @@ export function AdaptiveFlowWizard({
     [currentEntityDraft, entityStore, handleStepComplete]
   );
 
-  // ── Quick select existing counterparty
   const handleSelectExistingCp = useCallback(
     (cp: Counterparty) => {
       setSelectedCounterparty(cp);
       entityStore.useCounterparty(cp.id);
-      // Přepni fields smlouvy na tohoto klienta
       onFieldsUpdate({
         klient_jmeno: cp.fullName,
         klient_firma: cp.businessName || '',
@@ -148,7 +132,6 @@ export function AdaptiveFlowWizard({
     [entityStore, onFieldsUpdate, handleStepComplete]
   );
 
-  // ── Apply template
   const handleSelectTemplate = useCallback(
     (tpl: WorkTemplate) => {
       setSelectedTemplate(tpl);
@@ -169,7 +152,6 @@ export function AdaptiveFlowWizard({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      {/* Backdrop */}
       <motion.div
         className="absolute inset-0 bg-black/80 backdrop-blur-md"
         onClick={onClose}
@@ -177,26 +159,25 @@ export function AdaptiveFlowWizard({
         animate={{ opacity: 1 }}
       />
 
-      {/* Modal */}
       <motion.div
-        className="relative w-full max-w-3xl bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+        className="relative w-full max-w-3xl bg-[#09090b] border border-[rgba(255,255,255,0.08)] rounded-2xl shadow-2xl overflow-hidden flex flex-col"
         style={{ maxHeight: '90vh', height: '700px' }}
         initial={{ scale: 0.95, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.95, y: 20 }}
       >
-        {/* Top Bar — Progress + ETA */}
-        <div className="border-b border-zinc-800 bg-zinc-900/50">
+        {/* Top Bar */}
+        <div className="border-b border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.03)]">
           <div className="px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-                <Zap className="w-4 h-4 text-amber-400" />
+              <div className="w-8 h-8 rounded-lg bg-[rgba(200,150,46,0.1)] border border-[rgba(200,150,46,0.2)] flex items-center justify-center">
+                <Zap className="w-4 h-4 text-[#c8962e]" />
               </div>
               <div>
-                <h1 className="text-base font-medium text-zinc-100">
+                <h1 className="text-base font-medium text-[#f4f4f5]">
                   {stepTitle(contractType)}
                 </h1>
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-[#71717a]">
                   Krok {flowState.completedSteps.length + 1} z {steps.length}
                   {etaMinutes > 0 && (
                     <>
@@ -210,16 +191,16 @@ export function AdaptiveFlowWizard({
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-lg hover:bg-zinc-800 flex items-center justify-center text-zinc-500"
+              className="w-8 h-8 rounded-lg hover:bg-[rgba(255,255,255,0.05)] flex items-center justify-center text-[#71717a] transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Progress bar */}
-          <div className="h-1 bg-zinc-900 relative overflow-hidden">
+          <div className="h-1 bg-[rgba(255,255,255,0.04)] relative overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-amber-500 to-amber-300"
+              className="h-full bg-[#c8962e]"
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.4 }}
             />
@@ -256,15 +237,15 @@ export function AdaptiveFlowWizard({
         </div>
 
         {/* Bottom nav */}
-        <div className="border-t border-zinc-800 px-6 py-3 flex items-center justify-between bg-zinc-900/30">
+        <div className="border-t border-[rgba(255,255,255,0.06)] px-6 py-3 flex items-center justify-between bg-[rgba(255,255,255,0.02)]">
           <button
             onClick={onClose}
-            className="text-xs text-zinc-500 hover:text-zinc-300 flex items-center gap-1.5"
+            className="text-xs text-[#71717a] hover:text-[#f4f4f5] flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             Zpět na starý režim
           </button>
-          <p className="text-[10px] text-zinc-600 uppercase tracking-wider">
+          <p className="text-[10px] text-[#71717a] uppercase tracking-wider">
             Adaptive Flow · {flowState.completedSteps.length} hotovo
           </p>
         </div>
@@ -272,10 +253,6 @@ export function AdaptiveFlowWizard({
     </motion.div>
   );
 }
-
-// ──────────────────────────────────────────────────────────────────────────
-// STEP CONTENT ROUTER
-// ──────────────────────────────────────────────────────────────────────────
 
 interface StepContentProps {
   step: FlowStep;
@@ -296,8 +273,6 @@ function StepContent(props: StepContentProps) {
   const { step, entityStore, setCurrentEntityDraft, currentEntityDraft } = props;
 
   if (currentEntityDraft) {
-    // MultiInputComposer pro rozpracovaný entitní draft
-    const isMe = currentEntityDraft.mode === 'me';
     return (
       <MultiInputComposer
         mode={currentEntityDraft.mode}
@@ -386,10 +361,6 @@ function StepContent(props: StepContentProps) {
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// INDIVIDUAL STEPS — Každý krok je jednoduchá komponenta
-// ──────────────────────────────────────────────────────────────────────────
-
 function IntroStep({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="h-full flex flex-col items-center justify-center text-center px-8">
@@ -397,17 +368,17 @@ function IntroStep({ onContinue }: { onContinue: () => void }) {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: 'spring', delay: 0.1 }}
-        className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mb-6"
+        className="w-20 h-20 rounded-2xl bg-[rgba(200,150,46,0.2)] border border-[rgba(200,150,46,0.3)] flex items-center justify-center mb-6"
       >
-        <Zap className="w-10 h-10 text-zinc-950" />
+        <Zap className="w-10 h-10 text-[#c8962e]" />
       </motion.div>
-      <h2 className="text-2xl font-light text-zinc-100 mb-3">Pojďme na to.</h2>
-      <p className="text-zinc-400 max-w-md mb-8">
+      <h2 className="text-2xl font-light text-[#f4f4f5] mb-3">Pojďme na to.</h2>
+      <p className="text-[#71717a] max-w-md mb-8">
         Připravíme smlouvu o dílo. Appka si pamatuje tvoje údaje, takže to bude rychlé.
       </p>
       <button
         onClick={onContinue}
-        className="px-8 py-3 bg-amber-500 hover:bg-amber-400 text-zinc-950 rounded-xl font-medium flex items-center gap-2 transition-colors"
+        className="btn-apple-primary text-sm"
       >
         Začít
         <ChevronRight className="w-4 h-4" />
@@ -427,36 +398,36 @@ function IdentifyMeStep({
 }) {
   return (
     <div className="h-full flex flex-col p-8 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-light text-zinc-100 mb-2">Tvoje údaje</h2>
-      <p className="text-zinc-500 mb-8">
+      <h2 className="text-2xl font-light text-[#f4f4f5] mb-2">Tvoje údaje</h2>
+      <p className="text-[#71717a] mb-8">
         {hasProfile ? 'Mám je uložené. Stačí potvrdit.' : 'Vyplň je jednou, appka si je pamatuje.'}
       </p>
 
       <div className="space-y-3 flex-1">
         <button
           onClick={onFill}
-          className="w-full p-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-left transition-colors group"
+          className="w-full p-4 bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.06)] rounded-xl text-left transition-colors group"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-              <User className="w-5 h-5 text-amber-400" />
+            <div className="w-10 h-10 rounded-lg bg-[rgba(200,150,46,0.1)] border border-[rgba(200,150,46,0.2)] flex items-center justify-center">
+              <User className="w-5 h-5 text-[#c8962e]" />
             </div>
             <div className="flex-1">
-              <p className="text-sm text-zinc-100 font-medium">
+              <p className="text-sm text-[#f4f4f5] font-medium">
                 {hasProfile ? 'Upravit moje údaje' : 'Vyplnit mé údaje'}
               </p>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-[#71717a]">
                 Ctrl+V z dokumentu, nebo foto vizitky
               </p>
             </div>
-            <ChevronRight className="w-5 h-5 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+            <ChevronRight className="w-5 h-5 text-[#71717a] group-hover:text-[#a1a1aa] transition-colors" />
           </div>
         </button>
 
         {hasProfile && (
           <button
             onClick={onContinue}
-            className="w-full p-4 bg-amber-500 hover:bg-amber-400 text-zinc-950 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
+            className="btn-apple-primary w-full text-sm"
           >
             <Check className="w-4 h-4" />
             Údaje sedí, pokračovat
@@ -482,8 +453,8 @@ function IdentifyCounterpartyStep({
 }) {
   return (
     <div className="h-full flex flex-col p-8 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-light text-zinc-100 mb-2">S kým to uzavíráme?</h2>
-      <p className="text-zinc-500 mb-6">
+      <h2 className="text-2xl font-light text-[#f4f4f5] mb-2">S kým to uzavíráme?</h2>
+      <p className="text-[#71717a] mb-6">
         {existingCount > 0
           ? `Mám ${existingCount} uložených klientů.`
           : 'Zatím nemám žádné klienty uložené.'}
@@ -494,25 +465,25 @@ function IdentifyCounterpartyStep({
           <button
             key={cp.id}
             onClick={() => onSelectExisting(cp)}
-            className="w-full p-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-left flex items-center gap-3 group"
+            className="w-full p-3 bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.06)] rounded-xl text-left flex items-center gap-3 group transition-colors"
           >
-            <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+            <div className="w-10 h-10 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.08)] flex items-center justify-center text-[#a1a1aa]">
               <Building2 className="w-5 h-5" />
             </div>
             <div className="flex-1">
-              <p className="text-sm text-zinc-100">{cp.label}</p>
-              <p className="text-xs text-zinc-500">{cp.businessName || cp.fullName}</p>
+              <p className="text-sm text-[#f4f4f5]">{cp.label}</p>
+              <p className="text-xs text-[#71717a]">{cp.businessName || cp.fullName}</p>
             </div>
-            <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400" />
+            <ChevronRight className="w-4 h-4 text-[#71717a] group-hover:text-[#a1a1aa]" />
           </button>
         ))}
 
         <button
           onClick={onAddNew}
-          className="w-full p-4 bg-zinc-900 hover:bg-zinc-800 border-2 border-dashed border-zinc-800 hover:border-cyan-500/40 rounded-xl text-left transition-colors"
+          className="w-full p-4 bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.06)] border-2 border-dashed border-[rgba(255,255,255,0.08)] hover:border-[rgba(200,150,46,0.3)] rounded-xl text-left transition-colors"
         >
-          <p className="text-sm text-zinc-100 font-medium">+ Přidat nového klienta</p>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-sm text-[#f4f4f5] font-medium">+ Přidat nového klienta</p>
+          <p className="text-xs text-[#71717a] mt-0.5">
             Ctrl+V, foto vizitky, nebo URL webu
           </p>
         </button>
@@ -521,7 +492,7 @@ function IdentifyCounterpartyStep({
       {existingCount === 0 && (
         <button
           onClick={onContinue}
-          className="text-xs text-zinc-500 hover:text-zinc-300 underline mt-4 self-center"
+          className="text-xs text-[#71717a] hover:text-[#f4f4f5] underline mt-4 self-center transition-colors"
         >
           Přeskočit, vyplním později
         </button>
@@ -541,8 +512,8 @@ function WorkTemplateStep({
 }) {
   return (
     <div className="h-full flex flex-col p-8 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-light text-zinc-100 mb-2">Co děláme?</h2>
-      <p className="text-zinc-500 mb-6">
+      <h2 className="text-2xl font-light text-[#f4f4f5] mb-2">Co děláme?</h2>
+      <p className="text-[#71717a] mb-6">
         Pokud to děláš opakovaně, vyber šablonu. Ušetří čas.
       </p>
 
@@ -551,17 +522,17 @@ function WorkTemplateStep({
           <button
             key={tpl.id}
             onClick={() => onSelect(tpl)}
-            className="w-full p-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-left group"
+            className="w-full p-4 bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.06)] rounded-xl text-left group transition-colors"
           >
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mt-0.5">
-                <Hammer className="w-5 h-5 text-amber-400" />
+              <div className="w-10 h-10 rounded-lg bg-[rgba(200,150,46,0.1)] border border-[rgba(200,150,46,0.2)] flex items-center justify-center mt-0.5">
+                <Hammer className="w-5 h-5 text-[#c8962e]" />
               </div>
               <div className="flex-1">
-                <p className="text-sm text-zinc-100 font-medium">{tpl.label}</p>
-                <p className="text-xs text-zinc-500 mt-0.5">{tpl.description}</p>
+                <p className="text-sm text-[#f4f4f5] font-medium">{tpl.label}</p>
+                <p className="text-xs text-[#71717a] mt-0.5">{tpl.description}</p>
                 {tpl.defaultPrice && (
-                  <p className="text-xs text-amber-400 mt-1.5">
+                  <p className="text-xs text-[#c8962e] mt-1.5">
                     ~{tpl.defaultPrice.toLocaleString('cs-CZ')} Kč
                   </p>
                 )}
@@ -573,7 +544,7 @@ function WorkTemplateStep({
 
       <button
         onClick={onSkip}
-        className="text-xs text-zinc-500 hover:text-zinc-300 underline mt-4 self-center"
+        className="text-xs text-[#71717a] hover:text-[#f4f4f5] underline mt-4 self-center transition-colors"
       >
         Popsat ručně
       </button>
@@ -592,12 +563,12 @@ function WorkDetailsStep({
 }) {
   return (
     <div className="h-full flex flex-col p-8 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-light text-zinc-100 mb-2">Co přesně a do kdy?</h2>
-      <p className="text-zinc-500 mb-6">Detailní popis a termín dokončení.</p>
+      <h2 className="text-2xl font-light text-[#f4f4f5] mb-2">Co přesně a do kdy?</h2>
+      <p className="text-[#71717a] mb-6">Detailní popis a termín dokončení.</p>
 
       <div className="space-y-4 flex-1">
         <div>
-          <label className="block text-xs text-zinc-400 mb-1.5 uppercase tracking-wider font-medium">
+          <label className="block text-xs text-[#a1a1aa] mb-1.5 uppercase tracking-wider font-medium">
             Popis díla
           </label>
           <textarea
@@ -605,11 +576,11 @@ function WorkDetailsStep({
             onChange={(e) => onUpdate({ predmet_dila: e.target.value })}
             rows={4}
             placeholder="Co přesně má být výsledkem..."
-            className="w-full px-3 py-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-sm text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none focus:border-zinc-700"
+            className="apple-input w-full resize-none"
           />
         </div>
         <div>
-          <label className="block text-xs text-zinc-400 mb-1.5 uppercase tracking-wider font-medium">
+          <label className="block text-xs text-[#a1a1aa] mb-1.5 uppercase tracking-wider font-medium">
             Termín dokončení
           </label>
           <input
@@ -617,7 +588,7 @@ function WorkDetailsStep({
             value={currentFields.termin_plneni || ''}
             onChange={(e) => onUpdate({ termin_plneni: e.target.value })}
             placeholder="např. 30. září 2026"
-            className="w-full px-3 py-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-700"
+            className="apple-input w-full"
           />
         </div>
       </div>
@@ -625,7 +596,7 @@ function WorkDetailsStep({
       <button
         onClick={onContinue}
         disabled={!currentFields.predmet_dila?.trim()}
-        className="w-full mt-6 py-3 bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-950 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
+        className="btn-apple-primary w-full mt-6 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Pokračovat
         <ChevronRight className="w-4 h-4" />
@@ -645,12 +616,12 @@ function PricingStep({
 }) {
   return (
     <div className="h-full flex flex-col p-8 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-light text-zinc-100 mb-2">Cena a platba</h2>
-      <p className="text-zinc-500 mb-6">Kolik to stojí a jak se platí.</p>
+      <h2 className="text-2xl font-light text-[#f4f4f5] mb-2">Cena a platba</h2>
+      <p className="text-[#71717a] mb-6">Kolik to stojí a jak se platí.</p>
 
       <div className="space-y-4 flex-1">
         <div>
-          <label className="block text-xs text-zinc-400 mb-1.5 uppercase tracking-wider font-medium">
+          <label className="block text-xs text-[#a1a1aa] mb-1.5 uppercase tracking-wider font-medium">
             Částka (Kč)
           </label>
           <input
@@ -658,11 +629,11 @@ function PricingStep({
             value={currentFields.cena || ''}
             onChange={(e) => onUpdate({ cena: e.target.value })}
             placeholder="45000"
-            className="w-full px-3 py-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-700 font-mono"
+            className="apple-input w-full font-mono"
           />
         </div>
         <div>
-          <label className="block text-xs text-zinc-400 mb-1.5 uppercase tracking-wider font-medium">
+          <label className="block text-xs text-[#a1a1aa] mb-1.5 uppercase tracking-wider font-medium">
             Splatnost faktury (dny)
           </label>
           <input
@@ -670,7 +641,7 @@ function PricingStep({
             value={currentFields.datum_platby || ''}
             onChange={(e) => onUpdate({ datum_platby: e.target.value })}
             placeholder="14"
-            className="w-full px-3 py-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-700 font-mono"
+            className="apple-input w-full font-mono"
           />
         </div>
       </div>
@@ -678,7 +649,7 @@ function PricingStep({
       <button
         onClick={onContinue}
         disabled={!currentFields.cena?.trim()}
-        className="w-full mt-6 py-3 bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-950 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
+        className="btn-apple-primary w-full mt-6 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Pokračovat
         <ChevronRight className="w-4 h-4" />
@@ -704,8 +675,8 @@ function SafeguardsStep({ onContinue }: { onContinue: () => void }) {
 
   return (
     <div className="h-full flex flex-col p-8 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-light text-zinc-100 mb-2">Klid v duši</h2>
-      <p className="text-zinc-500 mb-6">Co chceš mít ošetřené?</p>
+      <h2 className="text-2xl font-light text-[#f4f4f5] mb-2">Klid v duši</h2>
+      <p className="text-[#71717a] mb-6">Co chceš mít ošetřené?</p>
 
       <div className="space-y-2 flex-1">
         {items.map((item) => {
@@ -714,24 +685,24 @@ function SafeguardsStep({ onContinue }: { onContinue: () => void }) {
             <button
               key={item.key}
               onClick={() => setSafeguards((s) => ({ ...s, [item.key]: !s[item.key] }))}
-              className={`w-full p-4 rounded-xl text-left flex items-center gap-3 border transition-colors ${
+              className={`w-full p-4 rounded-xl text-left flex items-center gap-3 border transition-colors cursor-pointer ${
                 active
-                  ? 'bg-amber-500/10 border-amber-500/40'
-                  : 'bg-zinc-900 border-zinc-800 hover:bg-zinc-800'
+                  ? 'bg-[rgba(200,150,46,0.08)] border-[rgba(200,150,46,0.3)]'
+                  : 'bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.05)]'
               }`}
             >
               <div
                 className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors ${
-                  active ? 'bg-amber-500 border-amber-500' : 'border-zinc-700'
+                  active ? 'bg-[#c8962e] border-[#c8962e]' : 'border-[rgba(255,255,255,0.15)]'
                 }`}
               >
-                {active && <Check className="w-3.5 h-3.5 text-zinc-950" />}
+                {active && <Check className="w-3.5 h-3.5 text-[#09090b]" />}
               </div>
               <div className="flex-1">
-                <p className={`text-sm font-medium ${active ? 'text-zinc-100' : 'text-zinc-300'}`}>
+                <p className={`text-sm font-medium ${active ? 'text-[#f4f4f5]' : 'text-[#a1a1aa]'}`}>
                   {item.label}
                 </p>
-                <p className="text-xs text-zinc-500 mt-0.5">{item.desc}</p>
+                <p className="text-xs text-[#71717a] mt-0.5">{item.desc}</p>
               </div>
             </button>
           );
@@ -740,7 +711,7 @@ function SafeguardsStep({ onContinue }: { onContinue: () => void }) {
 
       <button
         onClick={onContinue}
-        className="w-full mt-6 py-3 bg-amber-500 hover:bg-amber-400 text-zinc-950 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
+        className="btn-apple-primary w-full mt-6 text-sm"
       >
         Pokračovat
         <ChevronRight className="w-4 h-4" />
@@ -760,10 +731,10 @@ function PreviewStep({
 }) {
   return (
     <div className="h-full flex flex-col p-8 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-light text-zinc-100 mb-2">Tady je to.</h2>
-      <p className="text-zinc-500 mb-6">Mrkni na preview vpravo. Všechno je připravené.</p>
+      <h2 className="text-2xl font-light text-[#f4f4f5] mb-2">Tady je to.</h2>
+      <p className="text-[#71717a] mb-6">Mrkni na preview vpravo. Všechno je připravené.</p>
 
-      <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-5 space-y-3 flex-1">
+      <div className="bg-[rgba(255,255,255,0.03)] rounded-xl border border-[rgba(255,255,255,0.06)] p-5 space-y-3 flex-1">
         <SummaryRow label="Předmět" value={fields.predmet_dila} />
         <SummaryRow label="Termín" value={fields.termin_plneni} />
         <SummaryRow label="Cena" value={fields.cena ? `${fields.cena} Kč` : null} />
@@ -772,7 +743,7 @@ function PreviewStep({
 
       <button
         onClick={onContinue}
-        className="w-full mt-6 py-3 bg-amber-500 hover:bg-amber-400 text-zinc-950 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
+        className="btn-apple-primary w-full mt-6 text-sm"
       >
         <Download className="w-4 h-4" />
         Vygenerovat PDF
@@ -784,9 +755,9 @@ function PreviewStep({
 function SummaryRow({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
-      <span className="text-xs text-zinc-500 uppercase tracking-wider">{label}</span>
-      <span className="text-sm text-zinc-200 text-right flex-1 truncate">
-        {value || <span className="text-zinc-600 italic">—</span>}
+      <span className="text-xs text-[#71717a] uppercase tracking-wider">{label}</span>
+      <span className="text-sm text-[#f4f4f5] text-right flex-1 truncate">
+        {value || <span className="text-[#71717a] italic">—</span>}
       </span>
     </div>
   );
@@ -799,12 +770,12 @@ function ExportStep() {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: 'spring' }}
-        className="w-20 h-20 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center mb-6"
+        className="w-20 h-20 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center mb-6"
       >
-        <Check className="w-10 h-10 text-zinc-950" />
+        <Check className="w-10 h-10 text-emerald-400" />
       </motion.div>
-      <h2 className="text-2xl font-light text-zinc-100 mb-2">Hotovo!</h2>
-      <p className="text-zinc-400 max-w-md">
+      <h2 className="text-2xl font-light text-[#f4f4f5] mb-2">Hotovo!</h2>
+      <p className="text-[#71717a] max-w-md">
         Smlouva je vygenerovaná. Můžeš ji stáhnout jako PDF nebo text.
       </p>
     </div>
@@ -819,6 +790,8 @@ function stepTitle(contractType: ContractType): string {
       return 'Nová nájemní smlouva';
     case 'employment':
       return 'Nová pracovní smlouva';
+    case 'work':
+      return 'Nová smlouva o dílo';
     default:
       return 'Nová smlouva';
   }

@@ -62,7 +62,7 @@ export function DocumentPreview({
           p { text-align: justify; margin-bottom: 10px; }
         </style>
       </head><body>
-        ${contractHTML.replace(/<span class="[^"]*text-red[^"]*"[^>]*>\[\s*([^\]]*)\s*-\s*nedoplněno\s*\]<\/span>/g, '........................')}
+        ${contractHTML.replace(/<span class="[^"]*text-red[^"]*"[^>]*>\[\s*([^\]]*)\s*-\s*nedoplněno\s*\]\u003c\/span>/g, '........................')}
         <script>window.onload=function(){window.print();window.close();}</script>
       </body></html>
     `);
@@ -70,9 +70,9 @@ export function DocumentPreview({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] bg-zinc-900/40 border border-zinc-800/50 rounded-2xl overflow-hidden shadow-lg backdrop-blur-sm" id="document-preview-panel">
+    <div className="flex flex-col h-[calc(100vh-140px)] bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] rounded-2xl overflow-hidden shadow-lg backdrop-blur-sm" id="document-preview-panel">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800/50">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[rgba(255,255,255,0.06)]">
         {/* Tabs */}
         <div className="apple-tabs">
           <button
@@ -93,28 +93,28 @@ export function DocumentPreview({
 
         {/* Actions */}
         <div className="flex items-center gap-1.5">
-          <button onClick={handleCopy} className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-all cursor-pointer" title="Kopírovat">
-            {isCopied ? <Check className="w-3.5 h-3.5 text-gold" /> : <Copy className="w-3.5 h-3.5" />}
+          <button onClick={handleCopy} className="p-1.5 rounded-lg text-[#a1a1aa] hover:text-[#f4f4f5] hover:bg-[rgba(255,255,255,0.05)] transition-colors cursor-pointer" title="Kopírovat">
+            {isCopied ? <Check className="w-3.5 h-3.5 text-[#c8962e]" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
-          <button onClick={handleDownload} className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-all cursor-pointer" title="Stáhnout">
+          <button onClick={handleDownload} className="p-1.5 rounded-lg text-[#a1a1aa] hover:text-[#f4f4f5] hover:bg-[rgba(255,255,255,0.05)] transition-colors cursor-pointer" title="Stáhnout">
             <Download className="w-3.5 h-3.5" />
           </button>
-          <button onClick={handlePrint} className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-all cursor-pointer" title="Tisk">
+          <button onClick={handlePrint} className="p-1.5 rounded-lg text-[#a1a1aa] hover:text-[#f4f4f5] hover:bg-[rgba(255,255,255,0.05)] transition-colors cursor-pointer" title="Tisk">
             <Printer className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-grow overflow-y-auto p-5 md:p-6 bg-zinc-950/60">
+      <div className="flex-grow overflow-y-auto p-5 md:p-6 bg-[rgba(255,255,255,0.02)]">
         {activeTab === 'preview' ? (
-          <div className="max-w-2xl mx-auto p-8 md:p-10 bg-zinc-900 border border-zinc-800 shadow-xl rounded-sm min-h-[842px] relative">
+          <div className="max-w-2xl mx-auto p-8 md:p-10 bg-[#18181b] border border-[rgba(255,255,255,0.06)] shadow-xl rounded-sm min-h-[842px] relative">
             {/* Watermark */}
-            <div className="absolute top-3 right-3 text-[8px] uppercase font-semibold tracking-widest text-gold/20 border border-gold/10 px-2 py-0.5 rounded">
+            <div className="absolute top-3 right-3 text-[8px] uppercase font-semibold tracking-widest text-[#c8962e]/20 border border-[rgba(200,150,46,0.1)] px-2 py-0.5 rounded">
               DocBot
             </div>
             <div
-              className="prose prose-invert max-w-none text-xs leading-relaxed text-zinc-200 [&_h1]:text-base [&_h1]:font-bold [&_h1]:text-center [&_h1]:uppercase [&_h1]:mb-6 [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-5 [&_h2]:mb-2 [&_h2]:border-b [&_h2]:border-zinc-700 [&_h2]:pb-1 [&_p]:text-justify [&_p]:mb-2"
+              className="prose prose-invert max-w-none text-xs leading-relaxed text-[#f4f4f5] [&_h1]:text-base [&_h1]:font-bold [&_h1]:text-center [&_h1]:uppercase [&_h1]:mb-6 [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-5 [&_h2]:mb-2 [&_h2]:border-b [&_h2]:border-[rgba(255,255,255,0.08)] [&_h2]:pb-1 [&_p]:text-justify [&_p]:mb-2"
               dangerouslySetInnerHTML={{ __html: contractHTML }}
             />
           </div>
@@ -123,7 +123,7 @@ export function DocumentPreview({
             <textarea
               readOnly
               value={getPlainText()}
-              className="w-full h-full min-h-[500px] p-5 font-mono text-xs text-zinc-300 bg-zinc-900 border border-zinc-800 rounded-lg outline-none resize-none"
+              className="w-full h-full min-h-[500px] p-5 font-mono text-xs text-[#a1a1aa] bg-[#18181b] border border-[rgba(255,255,255,0.06)] rounded-lg outline-none resize-none"
             />
           </div>
         )}

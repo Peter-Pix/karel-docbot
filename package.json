@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "tsx server/dev-server.ts",
+    "dev:full": "concurrently \"pnpm dev:api\" \"pnpm dev\"",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
@@ -24,7 +26,9 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vercel/node": "^5.8.26",
+    "concurrently": "^10.0.4",
     "tailwindcss": "^4.1.14",
+    "tsx": "^4.23.11",
     "typescript": "~5.8.2"
   }
 }

@@ -40,19 +40,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       if (this.props.fallback) return this.props.fallback;
 
       return (
-        <div className="flex flex-col items-center justify-center h-full min-h-[200px] p-6 text-center bg-zinc-900/40 border border-zinc-800/50 rounded-2xl">
+        <div className="flex flex-col items-center justify-center h-full min-h-[200px] p-6 text-center bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] rounded-2xl">
           <div className="w-12 h-12 rounded-2xl bg-red-950/30 border border-red-500/20 flex items-center justify-center text-red-400 mb-3">
             <AlertTriangle className="w-6 h-6" />
           </div>
-          <h3 className="text-sm font-semibold text-zinc-100 mb-1">
+          <h3 className="text-sm font-semibold text-[#f4f4f5] mb-1">
             {this.props.label ? `Něco se pokazilo v sekci „${this.props.label}“` : 'Něco se pokazilo'}
           </h3>
-          <p className="text-xs text-zinc-400 mb-4 max-w-xs leading-relaxed">
+          <p className="text-xs text-[#a1a1aa] mb-4 max-w-xs leading-relaxed">
             Došlo k neočekávané chybě. Ostatní části aplikace by měly fungovat dál.
           </p>
           <button
             onClick={this.handleReset}
-            className="flex items-center gap-1.5 text-[11px] font-semibold bg-zinc-800/60 hover:bg-zinc-700/60 text-zinc-200 border border-zinc-700/50 py-2 px-4 rounded-lg transition-all cursor-pointer"
+            className="flex items-center gap-1.5 text-[11px] font-semibold bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.08)] text-[#f4f4f5] border border-[rgba(255,255,255,0.08)] py-2 px-4 rounded-lg transition-all cursor-pointer"
           >
             <RefreshCw className="w-3 h-3" />
             Zkusit znovu

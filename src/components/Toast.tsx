@@ -37,8 +37,8 @@ const TOAST_STYLES: Record<ToastType, { bg: string; border: string; icon: React.
   },
   warning: {
     bg: 'bg-amber-950/90',
-    border: 'border-amber-500/30',
-    icon: <AlertTriangle className="w-4 h-4 text-amber-400" />,
+    border: 'border-[rgba(200,150,46,0.3)]',
+    icon: <AlertTriangle className="w-4 h-4 text-[#c8962e]" />,
     text: 'text-amber-200',
   },
   info: {
@@ -83,7 +83,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               <p className={`text-xs ${style.text} leading-relaxed flex-grow`}>{toast.message}</p>
               <button
                 onClick={() => removeToast(toast.id)}
-                className="flex-shrink-0 text-zinc-500 hover:text-zinc-200 transition-colors"
+                className="flex-shrink-0 text-[#71717a] hover:text-[#f4f4f5] transition-colors"
                 aria-label="Zavřít oznámení"
               >
                 <X className="w-3.5 h-3.5" />

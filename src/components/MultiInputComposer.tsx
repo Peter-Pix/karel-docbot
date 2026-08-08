@@ -173,16 +173,16 @@ export function MultiInputComposer({
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-900/60 backdrop-blur-xl rounded-2xl border border-zinc-800 overflow-hidden">
+    <div className="flex flex-col h-full bg-[rgba(255,255,255,0.03)] backdrop-blur-xl rounded-2xl border border-[rgba(255,255,255,0.06)] overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
+      <div className="px-5 py-4 border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-medium text-zinc-100">
+          <h2 className="text-sm font-medium text-[#f4f4f5]">
             {stage === 'collecting' && (isMe ? 'Tvoje údaje' : 'Druhá strana')}
             {stage === 'analyzing' && 'Analyzuji...'}
             {stage === 'review' && 'Hotovo — zkontroluj'}
           </h2>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-[#71717a]">
             {stage === 'collecting' && 'Hoď sem cokoliv. Text, fotku, URL — v libovolném pořadí.'}
             {stage === 'analyzing' && `Slévám ${sources.length} ${sources.length === 1 ? 'zdroj' : sources.length < 5 ? 'zdroje' : 'zdrojů'} dohromady`}
             {stage === 'review' && 'Pokud něco chybí, můžeš přidat další zdroj.'}
@@ -191,7 +191,7 @@ export function MultiInputComposer({
         {onCancel && (
           <button
             onClick={onCancel}
-            className="w-8 h-8 rounded-lg hover:bg-zinc-800 flex items-center justify-center text-zinc-500"
+            className="w-8 h-8 rounded-lg hover:bg-[rgba(255,255,255,0.06)] flex items-center justify-center text-[#71717a]"
           >
             <X className="w-4 h-4" />
           </button>
@@ -229,7 +229,7 @@ export function MultiInputComposer({
 
                   <button
                     onClick={() => setActiveInput(null)}
-                    className="w-full p-3 border-2 border-dashed border-zinc-800 hover:border-zinc-700 rounded-xl text-sm text-zinc-500 hover:text-zinc-300 transition-colors flex items-center justify-center gap-2"
+                    className="w-full p-3 border-2 border-dashed border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.08)] rounded-xl text-sm text-[#71717a] hover:text-[#a1a1aa] transition-colors flex items-center justify-center gap-2"
                   >
                     <Plus className="w-4 h-4" />
                     Přidat další zdroj
@@ -286,7 +286,7 @@ export function MultiInputComposer({
               {sources.length > 0 && (
                 <button
                   onClick={analyzeAll}
-                  className="w-full py-3 rounded-xl font-medium flex items-center justify-center gap-2 text-zinc-950 transition-colors"
+                  className="w-full py-3 rounded-xl font-medium flex items-center justify-center gap-2 text-[#09090b] transition-colors"
                   style={{
                     backgroundColor: isMe ? '#f59e0b' : '#06b6d4',
                   }}
@@ -313,8 +313,8 @@ export function MultiInputComposer({
               className="flex flex-col items-center justify-center py-12 space-y-4"
             >
               <div className="relative">
-                <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 text-zinc-400 animate-spin" />
+                <div className="w-16 h-16 rounded-full bg-[rgba(255,255,255,0.06)] flex items-center justify-center">
+                  <Loader2 className="w-8 h-8 text-[#a1a1aa] animate-spin" />
                 </div>
                 <motion.div
                   className="absolute inset-0 rounded-full border-2 border-transparent"
@@ -323,8 +323,8 @@ export function MultiInputComposer({
                   transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                 />
               </div>
-              <p className="text-sm text-zinc-400">Slévám zdroje dohromady...</p>
-              <p className="text-xs text-zinc-600">Trvá to 3–8 sekund</p>
+              <p className="text-sm text-[#a1a1aa]">Slévám zdroje dohromady...</p>
+              <p className="text-xs text-[#71717a]">Trvá to 3–8 sekund</p>
             </motion.div>
           )}
 
@@ -367,7 +367,7 @@ function EmptyState({
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium">
+      <p className="text-xs text-[#71717a] uppercase tracking-wider font-medium">
         Jak chceš zadat údaje?
       </p>
       {items.map((item) => {
@@ -376,7 +376,7 @@ function EmptyState({
           <button
             key={item.label}
             onClick={item.onClick}
-            className="w-full p-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-left transition-colors group flex items-center gap-3"
+            className="w-full p-4 bg-[#18181b] hover:bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.06)] rounded-xl text-left transition-colors group flex items-center gap-3"
           >
             <div
               className="w-10 h-10 rounded-lg flex items-center justify-center border"
@@ -389,15 +389,15 @@ function EmptyState({
               <Icon className="w-5 h-5" />
             </div>
             <div className="flex-1">
-              <p className="text-sm text-zinc-100 font-medium">{item.label}</p>
-              <p className="text-xs text-zinc-500">{item.sublabel}</p>
+              <p className="text-sm text-[#f4f4f5] font-medium">{item.label}</p>
+              <p className="text-xs text-[#71717a]">{item.sublabel}</p>
             </div>
-            <Plus className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+            <Plus className="w-4 h-4 text-[#71717a] group-hover:text-[#a1a1aa] transition-colors" />
           </button>
         );
       })}
 
-      <p className="text-xs text-zinc-600 text-center pt-2">
+      <p className="text-xs text-[#71717a] text-center pt-2">
         💡 Můžeš přidat víc zdrojů najednou — AI je spojí dohromady.
       </p>
     </div>
@@ -425,7 +425,7 @@ function SourceCard({
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden"
+      className="bg-[#09090b] border border-[rgba(255,255,255,0.06)] rounded-xl overflow-hidden"
     >
       <div className="p-3 flex items-center gap-3">
         {source.kind === 'image' ? (
@@ -435,28 +435,28 @@ function SourceCard({
             className="w-12 h-12 rounded-lg object-cover"
           />
         ) : (
-          <div className={`w-12 h-12 rounded-lg bg-zinc-900 flex items-center justify-center ${iconColor}`}>
+          <div className={`w-12 h-12 rounded-lg bg-[#18181b] flex items-center justify-center ${iconColor}`}>
             <Icon className="w-5 h-5" />
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-zinc-500 uppercase tracking-wider">
+          <p className="text-xs text-[#71717a] uppercase tracking-wider">
             {source.kind === 'text' ? 'Text' : source.kind === 'image' ? 'Fotka' : 'URL'}
             {source.label && ` · ${source.label}`}
           </p>
-          <p className="text-sm text-zinc-200 truncate font-mono">
+          <p className="text-sm text-[#f4f4f5] truncate font-mono">
             {previewText.length > 50 ? previewText.slice(0, 50) + '...' : previewText}
           </p>
         </div>
         <button
           onClick={() => setExpanded(!expanded)}
-          className="w-8 h-8 rounded-lg hover:bg-zinc-800 flex items-center justify-center text-zinc-500"
+          className="w-8 h-8 rounded-lg hover:bg-[rgba(255,255,255,0.06)] flex items-center justify-center text-[#71717a]"
         >
           <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
         </button>
         <button
           onClick={onRemove}
-          className="w-8 h-8 rounded-lg hover:bg-red-500/20 flex items-center justify-center text-zinc-500 hover:text-red-400"
+          className="w-8 h-8 rounded-lg hover:bg-red-500/20 flex items-center justify-center text-[#71717a] hover:text-red-400"
         >
           <Trash2 className="w-4 h-4" />
         </button>
@@ -464,7 +464,7 @@ function SourceCard({
 
       {expanded && source.kind !== 'image' && (
         <div className="px-3 pb-3">
-          <pre className="text-xs text-zinc-400 bg-zinc-900 rounded p-2 max-h-32 overflow-y-auto whitespace-pre-wrap">
+          <pre className="text-xs text-[#a1a1aa] bg-[#18181b] rounded p-2 max-h-32 overflow-y-auto whitespace-pre-wrap">
             {source.preview}
           </pre>
         </div>
@@ -487,7 +487,7 @@ function TextInputForm({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
-      className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 space-y-2"
+      className="bg-[#09090b] border border-[rgba(255,255,255,0.06)] rounded-xl p-3 space-y-2"
     >
       <textarea
         autoFocus
@@ -495,19 +495,19 @@ function TextInputForm({
         onChange={(e) => setText(e.target.value)}
         placeholder="Vlož text... (Ctrl+V)"
         rows={5}
-        className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none focus:border-zinc-700 font-mono"
+        className="w-full px-3 py-2 bg-[#18181b] border border-[rgba(255,255,255,0.06)] rounded-lg text-sm text-[#f4f4f5] placeholder-[#71717a] resize-none focus:outline-none focus:border-[rgba(255,255,255,0.08)] font-mono"
       />
       <div className="flex gap-2">
         <button
           onClick={onCancel}
-          className="px-3 py-1.5 text-xs text-zinc-500 hover:text-zinc-300"
+          className="px-3 py-1.5 text-xs text-[#71717a] hover:text-[#a1a1aa]"
         >
           Zrušit
         </button>
         <button
           onClick={() => text.trim() && onSubmit(text.trim())}
           disabled={!text.trim()}
-          className="flex-1 py-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-200 rounded-lg text-sm font-medium"
+          className="flex-1 py-1.5 bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.08)] disabled:opacity-50 text-[#f4f4f5] rounded-lg text-sm font-medium"
         >
           Přidat
         </button>
@@ -530,7 +530,7 @@ function UrlInputForm({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
-      className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 space-y-2"
+      className="bg-[#09090b] border border-[rgba(255,255,255,0.06)] rounded-xl p-3 space-y-2"
     >
       <input
         autoFocus
@@ -538,19 +538,19 @@ function UrlInputForm({
         value={url}
         onChange={(e) => setUrl(e.target.value)}
         placeholder="https://firma.cz/kontakt"
-        className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-700"
+        className="w-full px-3 py-2 bg-[#18181b] border border-[rgba(255,255,255,0.06)] rounded-lg text-sm text-[#f4f4f5] placeholder-[#71717a] focus:outline-none focus:border-[rgba(255,255,255,0.08)]"
       />
       <div className="flex gap-2">
         <button
           onClick={onCancel}
-          className="px-3 py-1.5 text-xs text-zinc-500 hover:text-zinc-300"
+          className="px-3 py-1.5 text-xs text-[#71717a] hover:text-[#a1a1aa]"
         >
           Zrušit
         </button>
         <button
           onClick={() => url.trim() && onSubmit(url.trim())}
           disabled={!url.trim()}
-          className="flex-1 py-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-200 rounded-lg text-sm font-medium"
+          className="flex-1 py-1.5 bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.08)] disabled:opacity-50 text-[#f4f4f5] rounded-lg text-sm font-medium"
         >
           Přidat
         </button>
@@ -599,7 +599,7 @@ function ReviewPanel({
       animate={{ opacity: 1, y: 0 }}
       className="space-y-4"
     >
-      <div className="flex items-center gap-3 p-3 bg-zinc-900/50 rounded-xl">
+      <div className="flex items-center gap-3 p-3 bg-[rgba(255,255,255,0.02)] rounded-xl">
         <div
           className="w-10 h-10 rounded-full flex items-center justify-center"
           style={{
@@ -610,10 +610,10 @@ function ReviewPanel({
           <Check className="w-5 h-5 text-green-400" />
         </div>
         <div className="flex-1">
-          <p className="text-sm text-zinc-100 font-medium">
+          <p className="text-sm text-[#f4f4f5] font-medium">
             Spojeno ze {sourceCount} {sourceCount === 1 ? 'zdroje' : 'zdrojů'}
           </p>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-[#71717a]">
             Jistota: {Math.round((data.confidence || 0) * 100)}%
           </p>
         </div>
@@ -621,14 +621,14 @@ function ReviewPanel({
 
       {visibleFields.length > 0 ? (
         <div className="space-y-2">
-          <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium">
+          <p className="text-xs text-[#71717a] uppercase tracking-wider font-medium">
             Co jsem našel
           </p>
-          <div className="bg-zinc-950 rounded-lg border border-zinc-800 divide-y divide-zinc-800/50">
+          <div className="bg-[#09090b] rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-zinc-800/50">
             {visibleFields.map((field) => (
               <div key={field.key} className="px-3 py-2 flex items-center justify-between">
-                <span className="text-xs text-zinc-500">{field.label}</span>
-                <span className="text-sm text-zinc-200 font-mono">
+                <span className="text-xs text-[#71717a]">{field.label}</span>
+                <span className="text-sm text-[#f4f4f5] font-mono">
                   {String((targetData as any)[field.key])}
                 </span>
               </div>
@@ -636,14 +636,14 @@ function ReviewPanel({
           </div>
         </div>
       ) : (
-        <div className="p-4 bg-zinc-900/50 rounded-lg text-sm text-zinc-500 text-center">
+        <div className="p-4 bg-[rgba(255,255,255,0.02)] rounded-lg text-sm text-[#71717a] text-center">
           Nic se nepodařilo najít. Zkus jiné zdroje.
         </div>
       )}
 
       {data.missingFields.length > 0 && (
-        <div className="p-3 bg-zinc-900/50 rounded-lg text-xs text-zinc-400">
-          <p className="font-medium text-zinc-300 mb-1">Chybí:</p>
+        <div className="p-3 bg-[rgba(255,255,255,0.02)] rounded-lg text-xs text-[#a1a1aa]">
+          <p className="font-medium text-[#a1a1aa] mb-1">Chybí:</p>
           <p>{data.missingFields.join(', ')}</p>
         </div>
       )}
@@ -651,20 +651,20 @@ function ReviewPanel({
       <div className="flex gap-2 pt-2">
         <button
           onClick={onCancel}
-          className="px-4 py-2.5 rounded-lg text-sm font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
+          className="px-4 py-2.5 rounded-lg text-sm font-medium bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.08)] text-[#a1a1aa]"
         >
           Upravit zdroje
         </button>
         <button
           onClick={onAddMore}
-          className="px-4 py-2.5 rounded-lg text-sm font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
+          className="px-4 py-2.5 rounded-lg text-sm font-medium bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.08)] text-[#a1a1aa]"
         >
           + Přidat další
         </button>
         <button
           onClick={onConfirm}
           disabled={visibleFields.length === 0}
-          className="flex-1 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 text-zinc-950 disabled:opacity-50"
+          className="flex-1 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 text-[#09090b] disabled:opacity-50"
           style={{
             backgroundColor: isMe ? '#f59e0b' : '#06b6d4',
           }}

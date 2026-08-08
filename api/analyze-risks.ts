@@ -133,6 +133,34 @@ Odpověz VŽDY jako validní JSON dokument s těmito klíči: "risks", "safetySc
         });
         safetyScore -= 35;
       }
+    } else if (contractType === "work") {
+      if (contractHTML.includes("0 Kč") || contractHTML.includes("cenu neuveden")) {
+        risksList.push({
+          id: "work-price", title: "Chybí dohodnutá cena díla", level: "high",
+          description: "Smlouva o dílo bez uvedené ceny je právně nejistá a může vést k sporům.",
+          suggestion: "Uveďte konkrétní cenu díla včetně DPH a platebních podmínek.",
+          targetText: "0 Kč", replacementText: "50 000 Kč včetně DPH"
+        });
+        safetyScore -= 35;
+      }
+      if (contractHTML.includes("bez sankcí") || contractHTML.includes("žádné sankce")) {
+        risksList.push({
+          id: "work-penalty", title: "Chybí sankce za prodlení", level: "medium",
+          description: "Bez sankcí za prodlení nemá objednatel páky na dodržení termínu.",
+          suggestion: "Doplňte smluvní pokutu za dny zpoždění (např. 0,5 % z ceny díla denně).",
+          targetText: "žádné sankce", replacementText: "smluvní pokuta 0,5 % z ceny díla za každý den prodlení"
+        });
+        safetyScore -= 20;
+      }
+      if (!contractHTML.includes("autorsk") && !contractHTML.includes("licen")) {
+        risksList.push({
+          id: "work-ip", title: "Nevyřešená autorská práva", level: "high",
+          description: "Smlouva o dílo musí explicitně řešit převod autorských práv nebo licenci, jinak zůstávají u zhotovitele.",
+          suggestion: "Doplňte doložku o převodu autorských práv na objednatele po zaplacení.",
+          targetText: "", replacementText: "Zhotovitel převádí veškerá autorská práva k dílu na Objednatele po úplném zaplacení ceny."
+        });
+        safetyScore -= 30;
+      }
     } else if (contractType === "employment") {
       if (contractHTML.includes("6 měsíců zkušební doba")) {
         risksList.push({

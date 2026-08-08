@@ -34,6 +34,28 @@ const employmentFields = [
   { key: "pracovni_doba", label: "Týdenní pracovní doba", prompt: "Jaká bude stanovená týdenní pracovní doba? (standardní plný úvazek je '40 hodin týdně')" }
 ];
 
+const workFields = [
+  { key: "employerName", label: "Zhotovitel", prompt: "Kdo bude dílo vytvářet? Uveďte celé jméno nebo název firmy." },
+  { key: "employerICO", label: "IČO zhotovitele", prompt: "Jaké je IČO zhotovitele?" },
+  { key: "employerAddress", label: "Adresa zhotovitele", prompt: "Jaká je adresa zhotovitele?" },
+  { key: "employerEmail", label: "Email zhotovitele", prompt: "Jaký je email zhotovitele?" },
+  { key: "employerPhone", label: "Telefon zhotovitele", prompt: "Jaký je telefon zhotovitele?" },
+  { key: "clientName", label: "Objednatel", prompt: "Kdo dílo zadává? Uveďte celé jméno nebo název firmy objednatele." },
+  { key: "clientICO", label: "IČO objednatele", prompt: "Jaké je IČO objednatele?" },
+  { key: "clientAddress", label: "Adresa objednatele", prompt: "Jaká je adresa objednatele?" },
+  { key: "clientEmail", label: "Email objednatele", prompt: "Jaký je email objednatele?" },
+  { key: "workDescription", label: "Předmět díla", prompt: "Co přesně má být vytvořeno nebo dodáno? Popište předmět díla konkrétně." },
+  { key: "workDeadline", label: "Termín dokončení", prompt: "Do kdy má být dílo hotové?" },
+  { key: "workPrice", label: "Cena díla", prompt: "Jaká je dohodnutá cena díla?" },
+  { key: "workVat", label: "Cena včetně DPH", prompt: "Je cena včetně DPH?" },
+  { key: "paymentTerms", label: "Platební podmínky", prompt: "Jaké budou platební podmínky?" },
+  { key: "workPlace", label: "Místo plnění", prompt: "Kde bude dílo předáno?" },
+  { key: "safeguardNDA", label: "Doložka o mlčenlivosti", prompt: "Má smlouva obsahovat doložku o mlčenlivosti?" },
+  { key: "safeguardIP", label: "Převod autorských práv", prompt: "Má se převést právo k výsledkům díla na objednatele?" },
+  { key: "safeguardPenalty", label: "Sankce za prodlení", prompt: "Má smlouva obsahovat sankce za prodlení?" },
+  { key: "lawJurisdiction", label: "Rozhodné právo", prompt: "Pod jaké rozhodné právo má smlouva spadat?" },
+];
+
 const adviceDict: Record<string, string> = {
   poskytovatel: "Poskytovatel důvěrných informací je strana, která vlastní tajné informace (např. zdrojové kódy, know-how, data klientů) a předává je druhé straně za účelem spolupráce. Může jít o fyzickou osobu i firmu.",
   prijemce: "Příjemce důvěrných informací je ten, kdo se seznamuje s chráněným tajemstvím a zavazuje se ho chránit před zneužitím nebo vyzrazením třetím stranám.",
@@ -56,11 +78,24 @@ const adviceDict: Record<string, string> = {
   datum_nastupu: "Datum nástupu je den, kdy vzniká pracovní poměr a jste povinni začít vykonávat práci. Od tohoto dne vzniká nárok na mzdu.",
   mzda: "Mzda se sjednává jako hrubá měsíční nebo hodinová částka. Může být sjednána přímo ve smlouvě, nebo určena mzdovým výměrem. Sjednání ve smlouvě je pro zaměstnance výhodnější, protože ji zaměstnavatel nemůže jednostranně změnit.",
   zkusebni_doba: "Zkušební doba slouží oběma stranám k vyzkoušení spolupráce. U běžných zaměstnanců nesmí být delší než 3 měsíce. Nelze ji sjednat zpětně ani ji dodatečně prodlužovat.",
-  pracovni_doba: "Standardní týdenní pracovní doba při plném úvazku činí 40 hodin týdně. Je možné sjednat i zkrácený úvazek."
+  pracovni_doba: "Standardní týdenní pracovní doba při plném úvazku činí 40 hodin týdně. Je možné sjednat i zkrácený úvazek.",
+  employerName: "Zhotovitel je osoba nebo firma, která dílo vytváří. Uveďte přesný název nebo jméno. U fyzické osoby doplněte i bydliště.",
+  employerICO: "IČO zhotovitele se uvádí pro identifikaci. U OSVČ je to IČO živnosti, u firmy IČO z obchodního rejstříku.",
+  clientName: "Objednatel je strana, která dílo objednává a platí za něj. Obvykle firma, může být i fyzická osoba.",
+  clientICO: "IČO objednatele. Uveďte, pokud je objednatelem firma nebo podnikající fyzická osoba.",
+  workDescription: "Předmět díla popište konkrétně. Čím přesnější popis, tím méně sporů. Uveďte rozsah, formu předání a případné milníky.",
+  workDeadline: "Termín dokončení by měl být jasný a měřitelný. Doporučuje se uvést datum předání finální verze.",
+  workPrice: "Cena díla může být pevná, hodinová nebo kombinovaná. Uveďte, zda je včetně či bez DPH, a měnu.",
+  paymentTerms: "Platební podmínky chrání obě strany. Standardně se sjednává záloha 30–50 % před zahájením a doplatek po předání.",
+  workPlace: "Místo plnění určuje, kde a jak se dílo předává. Může být elektronicky (email/cloud) nebo fyzicky.",
+  safeguardNDA: "Doložka o mlčenlivosti chrání obchodní tajemství a know-how. Doporučuje se u citlivých projektů.",
+  safeguardIP: "Převod autorských práv zajišťuje, že objednatel získá práva k výsledkům díla. Bez ní zůstává autor u zhotovitele.",
+  safeguardPenalty: "Sankce za prodlení motivuje zhotovitele dodržet termín. Měla by být přiměřená, ne trestná.",
+  lawJurisdiction: "Rozhodné právo určuje, který právní řád se použije při sporu. Pro české smluvní vztahy doporučujeme české právo."
 };
 
 function smartLocalChatFallback(contractType: string, messages: any[], currentFields: any) {
-  const fieldsList = contractType === "nda" ? ndaFields : contractType === "rent" ? rentFields : employmentFields;
+  const fieldsList = contractType === "nda" ? ndaFields : contractType === "rent" ? rentFields : contractType === "work" ? workFields : employmentFields;
   const emptyFields = fieldsList.filter(f => !currentFields[f.key] || currentFields[f.key].trim() === '');
   const userMessage = messages[messages.length - 1];
   const userText = userMessage ? userMessage.text.trim() : "";
@@ -113,7 +148,14 @@ function smartLocalChatFallback(contractType: string, messages: any[], currentFi
     [/zaměstnanec|zamestnanec/i, "zamestnanec"], [/pozice|druh práce/i, "pracovni_pozice"],
     [/místo výkonu|misto vykonu/i, "misto_vykonu"], [/nástup|nastup|datum nástupu/i, "datum_nastupu"],
     [/mzda|plat/i, "mzda"], [/zkušební|zkusebni/i, "zkusebni_doba"],
-    [/pracovní doba|pracovni doba/i, "pracovni_doba"]
+    [/pracovní doba|pracovni doba/i, "pracovni_doba"],
+    [/zhotovitel/i, "employerName"], [/objednatel/i, "clientName"],
+    [/předmět díla|predmet dla|popis praci|popis práci|co dodáš/i, "workDescription"],
+    [/termín|termin|deadline/i, "workDeadline"], [/cena|honorář|honorar/i, "workPrice"],
+    [/DPH|vat/i, "workVat"], [/platba|záloha|zbytek|splátk/i, "paymentTerms"],
+    [/místo plnění|misto plneni/i, "workPlace"], [/mlčenlivost|mlcenlivost|NDA/i, "safeguardNDA"],
+    [/autorská práva|autorska prava|převod práv/i, "safeguardIP"],
+    [/sankce|prodlení|prodeleni|penále/i, "safeguardPenalty"]
   ];
 
   for (const [pattern, fieldKey] of fieldPatterns) {
@@ -222,6 +264,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         - mzda: Výše měsíční mzdy
         - zkusebni_doba: Délka zkušební doby
         - pracovni_doba: Týdenní pracovní doba
+      `;
+    } else if (contractType === "work") {
+      fieldsToCollect = `
+        - employerName: Zhotovitel (kdo dílo vytváří)
+        - employerICO: IČO zhotovitele
+        - employerAddress: Adresa zhotovitele
+        - employerEmail: Email zhotovitele
+        - employerPhone: Telefon zhotovitele
+        - clientName: Objednatel (kdo dílo zadává)
+        - clientICO: IČO objednatele
+        - clientAddress: Adresa objednatele
+        - clientEmail: Email objednatele
+        - workDescription: Předmět díla
+        - workDeadline: Termín dokončení
+        - workPrice: Cena díla
+        - workVat: Cena včetně DPH?
+        - paymentTerms: Platební podmínky
+        - workPlace: Místo plnění
+        - safeguardNDA: Doložka o mlčenlivosti
+        - safeguardIP: Převod autorských práv
+        - safeguardPenalty: Sankce za prodlení
+        - lawJurisdiction: Rozhodné právo
       `;
     }
 

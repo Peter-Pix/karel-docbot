@@ -122,21 +122,21 @@ export function SmartEntryPanel({
   }, []);
 
   const accentClasses: Record<string, string> = {
-    amber: 'border-amber-500/40 bg-amber-500/10 text-amber-400',
-    cyan: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-400',
+    amber: 'border-[rgba(200,150,46,0.4)] bg-[rgba(200,150,46,0.1)] text-[#c8962e]',
+    cyan: 'border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.05)] text-[#a1a1aa]',
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-900/60 backdrop-blur-xl rounded-2xl border border-zinc-800 overflow-hidden">
+    <div className="flex flex-col h-full bg-[rgba(255,255,255,0.03)] backdrop-blur-xl rounded-2xl border border-[rgba(255,255,255,0.06)] overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
+      <div className="px-5 py-4 border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${accentClasses[accentColor]}`}>
             {isMe ? <User className="w-5 h-5" /> : <Building2 className="w-5 h-5" />}
           </div>
           <div>
-            <h2 className="text-sm font-medium text-zinc-100">{titleText}</h2>
-            <p className="text-xs text-zinc-500">
+            <h2 className="text-sm font-medium text-[#f4f4f5]">{titleText}</h2>
+            <p className="text-xs text-[#71717a]">
               {stage === 'input' && 'Hodit sem text, fotku, nebo vyber ze seznamu.'}
               {stage === 'parsing' && 'AI parsuje...'}
               {stage === 'review' && 'Zkontroluj, co jsem našel.'}
@@ -146,7 +146,7 @@ export function SmartEntryPanel({
         {onCancel && (
           <button
             onClick={onCancel}
-            className="w-8 h-8 rounded-lg hover:bg-zinc-800 flex items-center justify-center text-zinc-500"
+            className="w-8 h-8 rounded-lg hover:bg-[rgba(255,255,255,0.06)] flex items-center justify-center text-[#71717a]"
           >
             <X className="w-4 h-4" />
           </button>
@@ -167,7 +167,7 @@ export function SmartEntryPanel({
               {/* Quick select from library */}
               {!isMe && recentItems.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium">
+                  <p className="text-xs text-[#71717a] uppercase tracking-wider font-medium">
                     Poslední klienti
                   </p>
                   <div className="space-y-1.5">
@@ -175,27 +175,27 @@ export function SmartEntryPanel({
                       <button
                         key={item.id}
                         onClick={() => onSelectRecent?.(item)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 bg-zinc-800/60 hover:bg-zinc-800 rounded-lg text-left transition-colors group"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.06)] rounded-lg text-left transition-colors group"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xs font-medium">
+                        <div className="w-8 h-8 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] flex items-center justify-center text-[#a1a1aa] text-xs font-medium">
                           {item.label.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-zinc-100 truncate">{item.label}</p>
-                          <p className="text-xs text-zinc-500 truncate">
+                          <p className="text-sm text-[#f4f4f5] truncate">{item.label}</p>
+                          <p className="text-xs text-[#71717a] truncate">
                             {item.businessName || item.fullName}
                           </p>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                        <ChevronRight className="w-4 h-4 text-[#71717a] group-hover:text-[#a1a1aa] transition-colors" />
                       </button>
                     ))}
                   </div>
                   <div className="flex items-center gap-3 my-3">
-                    <div className="flex-1 h-px bg-zinc-800" />
-                    <span className="text-[10px] text-zinc-600 uppercase tracking-wider">
+                    <div className="flex-1 h-px bg-[rgba(255,255,255,0.06)]" />
+                    <span className="text-[10px] text-[#71717a] uppercase tracking-wider">
                       nebo nový
                     </span>
-                    <div className="flex-1 h-px bg-zinc-800" />
+                    <div className="flex-1 h-px bg-[rgba(255,255,255,0.06)]" />
                   </div>
                 </div>
               )}
@@ -215,8 +215,8 @@ export function SmartEntryPanel({
                       onClick={() => setActiveTab(tab.id)}
                       className={`py-2 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-2 transition-colors ${
                         active
-                          ? `bg-zinc-800 text-zinc-100 border border-zinc-700`
-                          : 'bg-zinc-900/40 text-zinc-500 hover:text-zinc-300 border border-zinc-800/50'
+                          ? `bg-[rgba(255,255,255,0.06)] text-[#f4f4f5] border border-[rgba(255,255,255,0.08)]`
+                          : 'bg-[rgba(255,255,255,0.04)] text-[#71717a] hover:text-[#a1a1aa] border border-[rgba(255,255,255,0.06)]'
                       }`}
                     >
                       <Icon className="w-3.5 h-3.5" />
@@ -234,15 +234,15 @@ export function SmartEntryPanel({
                     onChange={(e) => setPastedText(e.target.value)}
                     placeholder="Vlož sem vizitku, fakturu, e-mail, cokoliv...&#10;&#10;Např:&#10;Jan Novák&#10;IČO: 12345678&#10;ACME s.r.o.&#10;Bankovní účet: 123456789/0100&#10;jan@novak.cz&#10;+420 777 123 456"
                     rows={8}
-                    className="w-full px-3 py-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-sm text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none focus:border-zinc-700 font-mono"
+                    className="w-full px-3 py-2.5 bg-[#09090b] border border-[rgba(255,255,255,0.06)] rounded-lg text-sm text-[#f4f4f5] placeholder-[#71717a] resize-none focus:outline-none focus:border-[rgba(255,255,255,0.08)] font-mono"
                   />
                   <button
                     onClick={handlePaste}
                     disabled={!pastedText.trim()}
                     className={`w-full py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
                       pastedText.trim()
-                        ? `bg-${accentColor}-500 text-zinc-950 hover:bg-${accentColor}-400`
-                        : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
+                        ? `bg-${accentColor}-500 text-[#09090b] hover:bg-${accentColor}-400`
+                        : 'bg-[rgba(255,255,255,0.06)] text-[#71717a] cursor-not-allowed'
                     }`}
                     style={
                       pastedText.trim()
@@ -262,11 +262,11 @@ export function SmartEntryPanel({
               {activeTab === 'photo' && (
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-zinc-800 hover:border-zinc-700 rounded-xl py-8 px-4 text-center cursor-pointer transition-colors group"
+                  className="border-2 border-dashed border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.08)] rounded-xl py-8 px-4 text-center cursor-pointer transition-colors group"
                 >
-                  <Camera className="w-8 h-8 mx-auto mb-3 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
-                  <p className="text-sm text-zinc-300 mb-1">Vyfotit nebo vybrat obrázek</p>
-                  <p className="text-xs text-zinc-600">Vizitka, faktura, jakýkoliv dokument</p>
+                  <Camera className="w-8 h-8 mx-auto mb-3 text-[#71717a] group-hover:text-[#a1a1aa] transition-colors" />
+                  <p className="text-sm text-[#a1a1aa] mb-1">Vyfotit nebo vybrat obrázek</p>
+                  <p className="text-xs text-[#71717a]">Vizitka, faktura, jakýkoliv dokument</p>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -302,8 +302,8 @@ export function SmartEntryPanel({
               className="flex flex-col items-center justify-center py-12 space-y-4"
             >
               <div className="relative">
-                <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 text-zinc-400 animate-spin" />
+                <div className="w-16 h-16 rounded-full bg-[rgba(255,255,255,0.06)] flex items-center justify-center">
+                  <Loader2 className="w-8 h-8 text-[#a1a1aa] animate-spin" />
                 </div>
                 <motion.div
                   className="absolute inset-0 rounded-full border-2 border-transparent"
@@ -312,8 +312,8 @@ export function SmartEntryPanel({
                   transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                 />
               </div>
-              <p className="text-sm text-zinc-400">AI hledá údaje...</p>
-              <p className="text-xs text-zinc-600">Trvá to 2–5 sekund</p>
+              <p className="text-sm text-[#a1a1aa]">AI hledá údaje...</p>
+              <p className="text-xs text-[#71717a]">Trvá to 2–5 sekund</p>
             </motion.div>
           )}
 
@@ -332,14 +332,14 @@ export function SmartEntryPanel({
               />
 
               {parsedData.confidence < 0.6 && (
-                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-400">
+                <div className="p-3 bg-[rgba(200,150,46,0.1)] border border-[rgba(200,150,46,0.3)] rounded-lg text-xs text-[#c8962e]">
                   ⚠️ Nejsem si úplně jistý. Zkontroluj pečlivě.
                 </div>
               )}
 
               {parsedData.missingFields.length > 0 && (
-                <div className="p-3 bg-zinc-800/50 rounded-lg text-xs text-zinc-400">
-                  <p className="font-medium text-zinc-300 mb-1">Chybí mi:</p>
+                <div className="p-3 bg-[rgba(255,255,255,0.06)]/50 rounded-lg text-xs text-[#a1a1aa]">
+                  <p className="font-medium text-[#a1a1aa] mb-1">Chybí mi:</p>
                   <p>{parsedData.missingFields.join(', ')}</p>
                 </div>
               )}
@@ -347,13 +347,13 @@ export function SmartEntryPanel({
               <div className="flex gap-2 pt-2">
                 <button
                   onClick={reset}
-                  className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.08)] text-[#a1a1aa]"
                 >
                   Zkusit znovu
                 </button>
                 <button
                   onClick={() => onConfirm(parsedData)}
-                  className="flex-1 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 text-zinc-950"
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 text-[#09090b]"
                   style={{
                     backgroundColor: isMe ? '#f59e0b' : '#06b6d4',
                   }}
@@ -384,13 +384,13 @@ function UrlInputForm({ onSubmit, accentColor }: { onSubmit: (url: string) => vo
         value={url}
         onChange={(e) => setUrl(e.target.value)}
         placeholder="https://firma.cz/kontakt"
-        className="w-full px-3 py-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-700"
+        className="w-full px-3 py-2.5 bg-[#09090b] border border-[rgba(255,255,255,0.06)] rounded-lg text-sm text-[#f4f4f5] placeholder-[#71717a] focus:outline-none focus:border-[rgba(255,255,255,0.08)]"
       />
       <button
         onClick={() => url.trim() && onSubmit(url.trim())}
         disabled={!url.trim()}
         className={`w-full py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
-          url.trim() ? 'text-zinc-950' : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
+          url.trim() ? 'text-[#09090b]' : 'bg-[rgba(255,255,255,0.06)] text-[#71717a] cursor-not-allowed'
         }`}
         style={
           url.trim()
@@ -422,7 +422,7 @@ function ReviewSection({
 }) {
   if (!data) {
     return (
-      <div className="p-4 bg-zinc-800/50 rounded-lg text-sm text-zinc-500 text-center">
+      <div className="p-4 bg-[rgba(255,255,255,0.06)]/50 rounded-lg text-sm text-[#71717a] text-center">
         Žádné údaje k zobrazení.
       </div>
     );
@@ -445,12 +445,12 @@ function ReviewSection({
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium">{title}</p>
-      <div className="bg-zinc-950 rounded-lg border border-zinc-800 divide-y divide-zinc-800/50">
+      <p className="text-xs text-[#71717a] uppercase tracking-wider font-medium">{title}</p>
+      <div className="bg-[#09090b] rounded-lg border border-[rgba(255,255,255,0.06)] divide-y divide-zinc-800/50">
         {visibleFields.map((field) => (
           <div key={field.key} className="px-3 py-2 flex items-center justify-between">
-            <span className="text-xs text-zinc-500">{field.label}</span>
-            <span className="text-sm text-zinc-200 font-mono">{String(data[field.key])}</span>
+            <span className="text-xs text-[#71717a]">{field.label}</span>
+            <span className="text-sm text-[#f4f4f5] font-mono">{String(data[field.key])}</span>
           </div>
         ))}
       </div>

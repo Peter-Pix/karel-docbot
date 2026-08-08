@@ -10,7 +10,7 @@ export interface Message {
 export interface ContractFields {
   // Common fields
   contractType: ContractType;
-  
+
   // NDA specific
   poskytovatel?: string;
   prijemce?: string;
@@ -18,7 +18,7 @@ export interface ContractFields {
   smluvni_pokuta?: string;
   doba_platnosti?: string;
   rozhodne_pravo?: string;
-  
+
   // Rent specific
   pronajimatel?: string;
   najemce?: string;
@@ -28,7 +28,7 @@ export interface ContractFields {
   vratna_kauce?: string;
   vypovedni_lhuta?: string;
   datum_zacatku?: string;
-  
+
   // Employment specific
   zamestnavatel?: string;
   zamestnanec?: string;
@@ -38,25 +38,7 @@ export interface ContractFields {
   mzda?: string;
   zkusebni_doba?: string;
   pracovni_doba?: string;
-}
 
-export interface Risk {
-  id: string;
-  title: string;
-  level: 'low' | 'medium' | 'high';
-  description: string;
-  suggestion: string;
-  targetText: string; // The text in the contract to highlight/replace
-  replacementText: string; // Safer text to replace with
-  applied?: boolean;
-}
-
-export interface RiskAnalysisResult {
-  risks: Risk[];
-  safetyScore: number; // 0 - 100
-  summary: string;
-
-  
   // Work specific (Smlouva o dílo)
   employerName?: string;
   employerICO?: string;
@@ -77,5 +59,21 @@ export interface RiskAnalysisResult {
   safeguardIP?: string;
   safeguardPenalty?: string;
   lawJurisdiction?: string;
+}
 
+export interface Risk {
+  id: string;
+  title: string;
+  level: 'low' | 'medium' | 'high';
+  description: string;
+  suggestion: string;
+  targetText: string; // The text in the contract to highlight/replace
+  replacementText: string; // Safer text to replace with
+  applied?: boolean;
+}
+
+export interface RiskAnalysisResult {
+  risks: Risk[];
+  safetyScore: number; // 0 - 100
+  summary: string;
 }

@@ -311,7 +311,7 @@ export default function App() {
   }, [contractType, handleSelectContract]);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans flex flex-col transition-colors">
+    <div className="min-h-screen bg-[#09090b] text-[#f4f4f5] font-sans flex flex-col transition-colors">
       {showLanding && !contractType ? (
         <LandingPage onStart={() => handleSelectContract('work')} />
       ) : (

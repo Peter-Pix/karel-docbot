@@ -18,42 +18,42 @@ export function SettingsModal({ isOpen, onClose, selectedModel, onSelectModel }:
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden animate-fade-in-up">
+      <div className="bg-[#18181b] border border-[rgba(255,255,255,0.08)] rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden animate-fade-in-up">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[rgba(255,255,255,0.06)]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center">
-              <Cpu className="w-4 h-4 text-gold" />
+            <div className="w-8 h-8 rounded-lg bg-[rgba(200,150,46,0.1)] flex items-center justify-center">
+              <Cpu className="w-4 h-4 text-[#c8962e]" />
             </div>
-            <h2 className="text-sm font-semibold text-zinc-100">AI Model</h2>
+            <h2 className="text-sm font-semibold text-[#f4f4f5]">AI Model</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-all cursor-pointer">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[rgba(255,255,255,0.05)] text-[#a1a1aa] hover:text-[#f4f4f5] transition-colors cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Body */}
         <div className="p-5 space-y-2.5">
-          <p className="text-[11px] text-zinc-500 mb-3">
+          <p className="text-[11px] text-[#71717a] mb-3">
             Všechny modely běží na Ollama cloudu. Výchozí model je DeepSeek V4 Flash.
           </p>
           {AVAILABLE_MODELS.map((model) => (
             <button
               key={model.id}
               onClick={() => { onSelectModel(model.id); onClose(); }}
-              className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer ${
+              className={`w-full text-left p-3 rounded-xl border transition-colors cursor-pointer ${
                 selectedModel === model.id
-                  ? 'border-gold/40 bg-gold/5'
-                  : 'border-zinc-800 hover:border-zinc-700'
+                  ? 'border-[rgba(200,150,46,0.4)] bg-[rgba(200,150,46,0.05)]'
+                  : 'border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.1)]'
               }`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-medium text-zinc-100">{model.label}</div>
-                  <div className="text-[10px] text-zinc-500 mt-0.5">{model.desc}</div>
+                  <div className="text-sm font-medium text-[#f4f4f5]">{model.label}</div>
+                  <div className="text-[10px] text-[#71717a] mt-0.5">{model.desc}</div>
                 </div>
                 {selectedModel === model.id && (
-                  <div className="w-5 h-5 rounded-full bg-gold/20 text-gold flex items-center justify-center">
+                  <div className="w-5 h-5 rounded-full bg-[rgba(200,150,46,0.15)] text-[#c8962e] flex items-center justify-center">
                     <Check className="w-3 h-3" />
                   </div>
                 )}
@@ -63,9 +63,9 @@ export function SettingsModal({ isOpen, onClose, selectedModel, onSelectModel }:
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 bg-zinc-950/50 border-t border-zinc-800">
-          <p className="text-[10px] text-zinc-600">
-            Model: <span className="font-mono text-gold/70">{selectedModel}</span>
+        <div className="px-5 py-3 bg-[rgba(0,0,0,0.3)] border-t border-[rgba(255,255,255,0.06)]">
+          <p className="text-[10px] text-[#71717a]">
+            Model: <span className="font-mono text-[#c8962e]/70">{selectedModel}</span>
           </p>
         </div>
       </div>
