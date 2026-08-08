@@ -145,8 +145,8 @@ Místo reklamy jít k těm, kteří jsou „gatekeepery" pro freelancery:
 
 ## ✅ Akční To-Do (prioritní pořadí)
 
-1. [ ] Natočit demo video (15vteřin, Phone-only, reálný scénář)
-2. [ ] Postavit landing page s verzí B jako hero
+1. [ ] Natočit demo video (15vteřin, Phone-only, denní světlo)
+2. [x] Postavit landing page s verzí B jako hero
 3. [ ] Oslovit 3 co-workingová centra v Praze
 4. [ ] Založit waitlist / early access formulář
 5. [ ] Napsat 3 „pain point" posty na LinkedIn
