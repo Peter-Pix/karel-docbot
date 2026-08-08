@@ -450,14 +450,16 @@ export default function App() {
 
       {/* Adaptive Flow Wizard — nový adaptivní UX */}
       {isWizardOpen && contractType && (
-        <AdaptiveFlowWizard
-          contractType={contractType}
-          currentFields={fields as unknown as Record<string, string>}
-          onFieldsUpdate={(updates) => {
-            setFields((prev) => ({ ...prev, ...updates }));
-          }}
-          onClose={() => setIsWizardOpen(false)}
-        />
+        <ErrorBoundary label="průvodce">
+          <AdaptiveFlowWizard
+            contractType={contractType}
+            currentFields={fields as unknown as Record<string, string>}
+            onFieldsUpdate={(updates) => {
+              setFields((prev) => ({ ...prev, ...updates }));
+            }}
+            onClose={() => setIsWizardOpen(false)}
+          />
+        </ErrorBoundary>
       )}
         </>
       )}

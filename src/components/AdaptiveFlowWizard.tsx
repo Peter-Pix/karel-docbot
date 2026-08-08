@@ -97,8 +97,8 @@ export function AdaptiveFlowWizard({
 
   const handleEntityConfirm = useCallback(
     (parsed: ParsedEntityData) => {
-      if (!currentEntityDraft) return;
-      const result = applyParsedData(entityStore.store!, parsed);
+      if (!currentEntityDraft || !entityStore.store) return;
+      const result = applyParsedData(entityStore.store, parsed);
 
       if (currentEntityDraft.mode === 'me' && result.updatedStore.myProfile) {
         entityStore.saveProfile(result.updatedStore.myProfile);

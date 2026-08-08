@@ -66,7 +66,10 @@ export async function parseEntityData(req: ParseRequest): Promise<ParseResponse>
     }
 
     const data = await response.json();
-    return { success: true, data };
+
+    // Defensive normalization — backend should send arrays, but LLMs are unpredictable
+    const normalized = normalizeParseResponse(data);
+    return { success: true, data: normalized };
   } catch (err) {
     return {
       success: false,
@@ -96,10 +99,16 @@ export async function parseMultipleEntityData(req: MultiParseRequest): Promise<M
     }
 
     const data = await response.json();
+
+    const normalized = normalizeParseResponse(data?.merged || data);
+    const sourceResults = Array.isArray(data?.sources)
+      ? data.sources.map((s: any) => normalizeParseResponse(s))
+      : undefined;
+
     return {
       success: true,
-      data: data.merged,
-      sourceResults: data.sources,
+      data: normalized,
+      sourceResults,
     };
   } catch (err) {
     return {
@@ -107,6 +116,20 @@ export async function parseMultipleEntityData(req: MultiParseRequest): Promise<M
       error: err instanceof Error ? err.message : 'Neznámá chyba',
     };
   }
+}
+
+function normalizeParseResponse(raw: any): ParsedEntityData {
+  const safeObj = (value: any) =>
+    value && typeof value === 'object' && !Array.isArray(value) ? value : undefined;
+
+  return {
+    myProfile: safeObj(raw?.myProfile),
+    counterparty: safeObj(raw?.counterparty),
+    workTemplate: safeObj(raw?.workTemplate),
+    contractData: safeObj(raw?.contractData),
+    confidence: typeof raw?.confidence === 'number' ? raw.confidence : 0.7,
+    missingFields: Array.isArray(raw?.missingFields) ? raw.missingFields : [],
+  };
 }
 
 // ──────────────────────────────────────────────────────────────────────────

@@ -62,7 +62,7 @@ export function MultiInputComposer({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isMe = mode === 'me';
-  const accentColor = isMe ? 'amber' : 'cyan';
+  const accentColor = isMe ? 'amber' : 'neutral';
 
   // ── Přidej zdroj ──
   const addSource = useCallback((source: Omit<ComposerSource, 'id' | 'status'>) => {
@@ -105,7 +105,7 @@ export function MultiInputComposer({
           return;
         }
 
-        setMergedData(result.data);
+        setMergedData(normalizeComposerData(result.data));
         setStage('review');
         return;
       }
@@ -149,14 +149,14 @@ export function MultiInputComposer({
         }
 
         const merged = mergeParsedData(singleResults);
-        setMergedData(merged);
+        setMergedData(normalizeComposerData(merged));
         setStage('review');
         return;
       }
 
       // Aplikuj fuzzy normalizaci na výsledek
       const normalized = normalizeResult(result.data);
-      setMergedData(normalized);
+      setMergedData(normalizeComposerData(normalized));
       setStage('review');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Neznámá chyba');
@@ -288,7 +288,7 @@ export function MultiInputComposer({
                   onClick={analyzeAll}
                   className="w-full py-3 rounded-xl font-medium flex items-center justify-center gap-2 text-[#09090b] transition-colors"
                   style={{
-                    backgroundColor: isMe ? '#f59e0b' : '#06b6d4',
+                    backgroundColor: isMe ? '#c8962e' : '#a1a1aa',
                   }}
                 >
                   <Sparkles className="w-4 h-4" />
@@ -314,11 +314,11 @@ export function MultiInputComposer({
             >
               <div className="relative">
                 <div className="w-16 h-16 rounded-full bg-[rgba(255,255,255,0.06)] flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 text-[#a1a1aa] animate-spin" />
+                  <Loader2 className="w-8 h-8 text-[#c8962e] animate-spin" />
                 </div>
                 <motion.div
                   className="absolute inset-0 rounded-full border-2 border-transparent"
-                  style={{ borderTopColor: isMe ? '#f59e0b' : '#06b6d4' }}
+                  style={{ borderTopColor: isMe ? '#c8962e' : '#a1a1aa' }}
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                 />
@@ -342,6 +342,24 @@ export function MultiInputComposer({
       </div>
     </div>
   );
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// DEFENSIVE: ensure review panel never gets malformed AI data
+// ──────────────────────────────────────────────────────────────────────────
+
+function normalizeComposerData(data: ParsedEntityData | null): ParsedEntityData | null {
+  if (!data) return null;
+  const safe = (value: any) =>
+    value && typeof value === 'object' && !Array.isArray(value) ? value : undefined;
+  return {
+    myProfile: safe(data.myProfile),
+    counterparty: safe(data.counterparty),
+    workTemplate: safe(data.workTemplate),
+    contractData: safe(data.contractData),
+    confidence: typeof data.confidence === 'number' ? data.confidence : 0.7,
+    missingFields: Array.isArray(data.missingFields) ? data.missingFields : [],
+  };
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -381,9 +399,9 @@ function EmptyState({
             <div
               className="w-10 h-10 rounded-lg flex items-center justify-center border"
               style={{
-                borderColor: accentColor === 'amber' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(6, 182, 212, 0.3)',
-                backgroundColor: accentColor === 'amber' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(6, 182, 212, 0.1)',
-                color: accentColor === 'amber' ? '#fbbf24' : '#22d3ee',
+                borderColor: accentColor === 'amber' ? 'rgba(200, 150, 46, 0.3)' : 'rgba(255, 255, 255, 0.08)',
+                backgroundColor: accentColor === 'amber' ? 'rgba(200, 150, 46, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                color: accentColor === 'amber' ? '#c8962e' : '#a1a1aa',
               }}
             >
               <Icon className="w-5 h-5" />
@@ -607,7 +625,7 @@ function ReviewPanel({
             border: '1px solid rgba(34, 197, 94, 0.3)',
           }}
         >
-          <Check className="w-5 h-5 text-green-400" />
+          <Check className="w-5 h-5 text-[#c8962e]" />
         </div>
         <div className="flex-1">
           <p className="text-sm text-[#f4f4f5] font-medium">
@@ -666,7 +684,7 @@ function ReviewPanel({
           disabled={visibleFields.length === 0}
           className="flex-1 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 text-[#09090b] disabled:opacity-50"
           style={{
-            backgroundColor: isMe ? '#f59e0b' : '#06b6d4',
+            backgroundColor: isMe ? '#c8962e' : '#a1a1aa',
           }}
         >
           <Check className="w-4 h-4" />

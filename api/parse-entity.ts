@@ -48,22 +48,32 @@ async function queryOllamaVision(
     options: { temperature: 0.1 }, // Nízká teplota = konzistentní extrakce
   };
 
-  const response = await fetch(OLLAMA_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${OLLAMA_API_KEY}`,
-    },
-    body: JSON.stringify(body),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 25000);
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Ollama API error ${response.status}: ${errText}`);
+  try {
+    const response = await fetch(OLLAMA_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${OLLAMA_API_KEY}`,
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Ollama API error ${response.status}: ${errText}`);
+    }
+
+    const data = (await response.json()) as any;
+    return data?.message?.content || '';
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
   }
-
-  const data = (await response.json()) as any;
-  return data?.message?.content || '';
 }
 
 async function fetchUrlContent(url: string): Promise<string> {
@@ -149,13 +159,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
+      // Normalize AI output defensively
+      const normalizeEntity = (raw: any) => {
+        if (!raw || typeof raw !== 'object') return undefined;
+        return {
+          ...raw,
+          missingFields: Array.isArray(raw.missingFields) ? raw.missingFields : [],
+          confidence: typeof raw.confidence === 'number' ? raw.confidence : 0.7,
+        };
+      };
+
       return res.json({
         success: true,
         data: {
-          myProfile: parsed.myProfile || undefined,
-          counterparty: parsed.counterparty || undefined,
-          workTemplate: parsed.workTemplate || undefined,
-          contractData: parsed.contractData || undefined,
+          myProfile: normalizeEntity(parsed.myProfile),
+          counterparty: normalizeEntity(parsed.counterparty),
+          workTemplate: parsed.workTemplate && typeof parsed.workTemplate === 'object' ? parsed.workTemplate : undefined,
+          contractData: parsed.contractData && typeof parsed.contractData === 'object' ? parsed.contractData : undefined,
           confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.7,
           missingFields: Array.isArray(parsed.missingFields) ? parsed.missingFields : [],
         },
