@@ -1,4 +1,4 @@
-export type ContractType = 'nda' | 'rent' | 'employment';
+export type ContractType = 'nda' | 'rent' | 'employment' | 'work';
 
 export interface Message {
   id: string;
@@ -55,4 +55,27 @@ export interface RiskAnalysisResult {
   risks: Risk[];
   safetyScore: number; // 0 - 100
   summary: string;
+
+  
+  // Work specific (Smlouva o dílo)
+  employerName?: string;
+  employerICO?: string;
+  employerAddress?: string;
+  employerEmail?: string;
+  employerPhone?: string;
+  clientName?: string;
+  clientICO?: string;
+  clientAddress?: string;
+  clientEmail?: string;
+  workDescription?: string;
+  workDeadline?: string;
+  workPrice?: string;
+  workVat?: string;
+  paymentTerms?: string;
+  workPlace?: string;
+  safeguardNDA?: string;
+  safeguardIP?: string;
+  safeguardPenalty?: string;
+  lawJurisdiction?: string;
+
 }

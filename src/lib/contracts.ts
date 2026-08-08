@@ -195,17 +195,159 @@ const employmentSchema: FieldDefinition[] = [
   },
 ];
 
+
+// ─── Smlouva o dílo ──────────────────────────────────────────────
+const workSchema: FieldDefinition[] = [
+  {
+    key: 'employerName',
+    label: 'Zhotovitel',
+    type: 'text',
+    required: true,
+    placeholder: 'Jméno nebo název firmy',
+  },
+  {
+    key: 'employerICO',
+    label: 'IČO zhotovitele',
+    type: 'text',
+    required: false,
+    placeholder: '12345678',
+  },
+  {
+    key: 'employerAddress',
+    label: 'Adresa zhotovitele',
+    type: 'text',
+    required: false,
+    placeholder: 'Ulice 123, Město',
+  },
+  {
+    key: 'employerEmail',
+    label: 'Email zhotovitele',
+    type: 'email',
+    required: false,
+    placeholder: 'email@firma.cz',
+  },
+  {
+    key: 'employerPhone',
+    label: 'Telefon',
+    type: 'tel',
+    required: false,
+    placeholder: '+420...',
+  },
+  {
+    key: 'clientName',
+    label: 'Objednatel',
+    type: 'text',
+    required: true,
+    placeholder: 'Jméno nebo název firmy',
+  },
+  {
+    key: 'clientICO',
+    label: 'IČO objednatele',
+    type: 'text',
+    required: false,
+    placeholder: '12345678',
+  },
+  {
+    key: 'clientAddress',
+    label: 'Adresa objednatele',
+    type: 'text',
+    required: false,
+    placeholder: 'Ulice 123, Město',
+  },
+  {
+    key: 'clientEmail',
+    label: 'Email objednatele',
+    type: 'email',
+    required: false,
+    placeholder: 'email@klient.cz',
+  },
+  {
+    key: 'workDescription',
+    label: 'Předmět díla',
+    type: 'textarea',
+    required: true,
+    placeholder: 'Co přesně má být vytvořeno nebo dodáno?',
+  },
+  {
+    key: 'workDeadline',
+    label: 'Termín dokončení',
+    type: 'date',
+    required: false,
+  },
+  {
+    key: 'workPrice',
+    label: 'Cena díla (Kč)',
+    type: 'number',
+    required: false,
+    placeholder: '50000',
+  },
+  {
+    key: 'workVat',
+    label: 'Cena včetně DPH?',
+    type: 'select',
+    required: false,
+    options: ['Ano', 'Ne', 'Neplatí DPH'],
+    defaultValue: 'Ne',
+  },
+  {
+    key: 'paymentTerms',
+    label: 'Platební podmínky',
+    type: 'textarea',
+    required: false,
+    placeholder: 'Záloha 50%, zbytek při předání...',
+  },
+  {
+    key: 'workPlace',
+    label: 'Místo plnění',
+    type: 'text',
+    required: false,
+    placeholder: 'Kde bude dílo předáno?',
+  },
+  {
+    key: 'safeguardNDA',
+    label: 'Doložka o mlčenlivosti (NDA)',
+    type: 'checkbox',
+    required: false,
+    defaultValue: false,
+  },
+  {
+    key: 'safeguardIP',
+    label: 'Převod autorských práv',
+    type: 'checkbox',
+    required: false,
+    defaultValue: false,
+  },
+  {
+    key: 'safeguardPenalty',
+    label: 'Sankce za prodlení',
+    type: 'checkbox',
+    required: false,
+    defaultValue: false,
+  },
+  {
+    key: 'lawJurisdiction',
+    label: 'Rozhodčí doložka',
+    type: 'select',
+    required: false,
+    options: ['Česká republika', 'Jiná'],
+    defaultValue: 'Česká republika',
+  },
+];
+
+
 // ─── Schema Registry ───────────────────────────────────────────────
 const SCHEMAS: Record<ContractType, FieldDefinition[]> = {
   nda: ndaSchema,
   rent: rentSchema,
   employment: employmentSchema,
+  work: workSchema,
 };
 
 const TITLES: Record<ContractType, string> = {
   nda: 'Dohoda o ochraně důvěrných informací (NDA)',
   rent: 'Nájemní smlouva na byt',
   employment: 'Pracovní smlouva',
+  work: 'Smlouvu o dílo',
 };
 
 // ─── Accessor Functions ───────────────────────────────────────────

@@ -9,6 +9,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useToast } from './components/Toast';
 import { AdaptiveFlowWizard } from './components/AdaptiveFlowWizard';
+import { LandingPage } from './components/LandingPage';
 import { ContractType, Message, ContractFields, RiskAnalysisResult } from './types';
 import { getDefaultFields, getContractTitle, generateContractHTML } from './lib/templateGenerator';
 import { getFieldKeys } from './lib/contracts';
@@ -83,6 +84,7 @@ export default function App() {
 
   // Adaptive Flow Wizard
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [showLanding, setShowLanding] = useState(true);
 
   // Risk analysis
   const [riskAnalysis, setRiskAnalysis] = useState<RiskAnalysisResult | null>(null);
@@ -98,27 +100,11 @@ export default function App() {
   // ── Initialize contract session ──
   const handleSelectContract = useCallback((type: ContractType) => {
     setContractType(type);
-    const initialFields = getDefaultFields(type);
-    setFields(initialFields);
+    setFields(getDefaultFields(type));
+    setMessages([]);
     setRiskAnalysis(null);
-    setLeftTab('chat');
-
-    let greeting = '';
-    if (type === 'nda') {
-      greeting = 'Vítejte v DocBot! Pomohu vám sestavit **Dohodu o ochraně důvěrných informací (NDA)** podle českého práva.\n\nZačneme prvním krokem: **Jaké je prosím jméno nebo název firmy Poskytovatele důvěrných informací?**';
-    } else if (type === 'rent') {
-      greeting = 'Dobrý den! Připravíme společně **Nájemní smlouvu na byt** v souladu s občanským zákoníkem ČR.\n\nNejprve se zeptám: **Kdo je Pronajímatelem bytu?** Uveďte prosím celé jméno nebo název firmy.';
-    } else {
-      greeting = 'Dobrý den! Rád vám pomohu vytvořit profesionální **Pracovní smlouvu** podle zákoníku práce ČR.\n\nZačněme základním údajem: **Jaký je přesný název nebo jméno Zaměstnavatele?**';
-    }
-
-    setMessages([{
-      id: 'init',
-      sender: 'assistant',
-      text: greeting,
-      timestamp: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }),
-    }]);
-    setNextSuggestedPrompts(['✅ Ano, pokračovat', '❓ Vysvětlit podrobněji', '📋 Načíst vzorová data']);
+    setShowLanding(false);
+    setIsWizardOpen(true);
   }, []);
 
   // ── Load demo data ──
@@ -326,21 +312,29 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans flex flex-col transition-colors">
-      <AppHeader
-        contractType={contractType}
-        onBackToSelection={() => setContractType(null)}
-        onResetContract={handleResetContract}
-        selectedModel={selectedModel}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        onOpenWizard={contractType ? () => setIsWizardOpen(true) : undefined}
-      />
+      {showLanding && !contractType ? (
+        <LandingPage onStart={() => handleSelectContract('work')} />
+      ) : (
+        <>
+          <AppHeader
+            contractType={contractType}
+            onBackToSelection={() => {
+              setContractType(null);
+              setShowLanding(true);
+              setIsWizardOpen(false);
+            }}
+            onResetContract={handleResetContract}
+            selectedModel={selectedModel}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            onOpenWizard={contractType ? () => setIsWizardOpen(true) : undefined}
+          />
 
-      <main className="flex-grow w-full max-w-7xl mx-auto px-4 py-6 md:py-8 flex flex-col">
-        {!contractType ? (
-          <ErrorBoundary label="výběr smlouvy">
-            <DocumentSelection onSelect={handleSelectContract} />
-          </ErrorBoundary>
-        ) : (
+          <main className="flex-grow w-full max-w-7xl mx-auto px-4 py-6 md:py-8 flex flex-col">
+            {!contractType && !showLanding ? (
+              <ErrorBoundary label="výběr smlouvy">
+                <DocumentSelection onSelect={handleSelectContract} />
+              </ErrorBoundary>
+            ) : (
           <div className="grid lg:grid-cols-12 gap-5 items-start h-full">
             {/* Left Panel */}
             <div className="lg:col-span-5 flex flex-col h-full space-y-4">
@@ -439,6 +433,8 @@ export default function App() {
           }}
           onClose={() => setIsWizardOpen(false)}
         />
+      )}
+        </>
       )}
     </div>
   );
