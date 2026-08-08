@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { AppHeader } from './components/AppHeader';
 import { DocumentSelection } from './components/DocumentSelection';
 import { ChatPanel } from './components/ChatPanel';
@@ -8,6 +8,7 @@ import { FieldsEditorPanel } from './components/FieldsEditorPanel';
 import { SettingsModal } from './components/SettingsModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useToast } from './components/Toast';
+import { saveSession, loadSession, clearSession } from "./lib/sessionStore";
 import { AdaptiveFlowWizard } from './components/AdaptiveFlowWizard';
 import { LandingPage } from './components/LandingPage';
 import { ContractType, Message, ContractFields, RiskAnalysisResult } from './types';
@@ -75,12 +76,29 @@ export default function App() {
   const [fields, setFields] = useState<ContractFields>(() => getDefaultFields('nda'));
   const [messages, setMessages] = useState<Message[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isFallback, setIsFallback] = useState(false);
   const [nextSuggestedPrompts, setNextSuggestedPrompts] = useState<string[]>([]);
   const [highlightField, setHighlightField] = useState<string | undefined>(undefined);
 
   // Model — deepseek-v4-flash as primary
   const [selectedModel, setSelectedModel] = useState<string>('deepseek-v4-flash');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showRestorePrompt, setShowRestorePrompt] = useState(false);
+
+  // ── Restore session on mount ──
+  useEffect(() => {
+    const saved = loadSession();
+    if (saved && saved.contractType) {
+      setShowRestorePrompt(true);
+    }
+  }, []);
+
+  // ── Auto-save session on changes ──
+  useEffect(() => {
+    if (contractType || messages.length > 0) {
+      saveSession(contractType, fields, messages);
+    }
+  }, [contractType, fields, messages]);
 
   // Adaptive Flow Wizard
   const [isWizardOpen, setIsWizardOpen] = useState(false);
@@ -90,6 +108,23 @@ export default function App() {
   const [riskAnalysis, setRiskAnalysis] = useState<RiskAnalysisResult | null>(null);
   const [isAnalyzingRisks, setIsAnalyzingRisks] = useState(false);
   const [leftTab, setLeftTab] = useState<'chat' | 'editor' | 'risk'>('chat');
+
+  // ── Restore session handler ──
+  const handleRestoreSession = useCallback(() => {
+    const saved = loadSession();
+    if (!saved) return;
+    setContractType(saved.contractType);
+    setFields(saved.fields);
+    setMessages(saved.messages);
+    setShowLanding(false);
+    setShowRestorePrompt(false);
+    showToast("info", "Obnovena rozpracovaná smlouva");
+  }, [showToast]);
+
+  const handleDismissRestore = useCallback(() => {
+    clearSession();
+    setShowRestorePrompt(false);
+  }, []);
 
   // Memoized contract HTML for risk analysis (avoids regenerating on every render)
   const contractHTML = useMemo(() => {
@@ -197,6 +232,10 @@ export default function App() {
 
       const data = await response.json();
 
+      if (data._fallback) {
+        setIsFallback(true);
+      }
+
       if (data.extractedFields && Object.keys(data.extractedFields).length > 0) {
         setFields(prev => {
           const merged = { ...prev };
@@ -262,6 +301,10 @@ export default function App() {
       if (!response.ok) throw new Error('Chyba při analýze rizik');
 
       const data = await response.json();
+
+      if (data._fallback) {
+        setIsFallback(true);
+      }
 
       // Defensive validation — API may return malformed JSON from LLM
       const validated: RiskAnalysisResult = {
@@ -337,6 +380,24 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#09090b] text-[#f4f4f5] font-sans flex flex-col transition-colors">
+      {/* Session restore prompt */}
+      {showRestorePrompt && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 glass-strong rounded-2xl px-5 py-4 shadow-2xl border border-[rgba(200,150,46,0.2)] animate-fade-in-up max-w-sm w-full mx-4">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[rgba(200,150,46,0.15)] border border-[rgba(200,150,46,0.2)] flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg className="w-4 h-4 text-[#c8962e]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-[#f4f4f5] mb-1">Obnovit rozpracovanou smlouvu?</p>
+              <p className="text-xs text-[#71717a]">Máš tu nedokončenou smlouvu. Chceš pokračovat?</p>
+              <div className="flex gap-2 mt-3">
+                <button onClick={handleRestoreSession} className="flex-1 py-1.5 bg-[#c8962e] hover:bg-[#e4b44a] text-[#09090b] text-xs font-semibold rounded-lg transition-colors cursor-pointer">Obnovit</button>
+                <button onClick={handleDismissRestore} className="flex-1 py-1.5 bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.08)] text-[#a1a1aa] text-xs rounded-lg transition-colors cursor-pointer">Zahodit</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {showLanding && !contractType ? (
         <LandingPage onStart={() => handleSelectContract('work')} />
       ) : (
@@ -400,6 +461,7 @@ export default function App() {
                     nextSuggestedPrompts={nextSuggestedPrompts}
                     currentFields={fields}
                     contractType={contractType}
+                    isFallback={isFallback}
                   />
                 </ErrorBoundary>
               )}
