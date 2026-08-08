@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ContractType, ContractFields } from '../types';
 import { getFieldKeys, getFieldLabel, getFieldPlaceholder } from '../lib/contracts';
 import { validateField } from '../lib/validation';
-import { Edit3, Clipboard, RefreshCw, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Edit3, Clipboard, RefreshCw, AlertTriangle } from 'lucide-react';
 
 interface FieldsEditorPanelProps {
   contractType: ContractType;

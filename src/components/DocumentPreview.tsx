@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ContractType, ContractFields } from '../types';
 import { generateContractHTML, getContractTitle } from '../lib/templateGenerator';
 import { sanitizeHTML } from '../lib/sanitize';
-import { Copy, Download, Printer, FileText, Check, Eye, Code2 } from 'lucide-react';
+import { Copy, Download, Printer, Check, Eye, Code2 } from 'lucide-react';
 
 interface DocumentPreviewProps {
   contractType: ContractType;

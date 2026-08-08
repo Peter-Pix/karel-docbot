@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { AnimatePresence } from 'motion/react';
 import { AppHeader } from './components/AppHeader';
 import { DocumentSelection } from './components/DocumentSelection';
 import { ChatPanel } from './components/ChatPanel';
@@ -11,7 +10,7 @@ import { useToast } from './components/Toast';
 import { ContractType, Message, ContractFields, RiskAnalysisResult } from './types';
 import { getDefaultFields, getContractTitle, generateContractHTML } from './lib/templateGenerator';
 import { getFieldKeys } from './lib/contracts';
-import { ShieldCheck, MessageSquare, Edit3, Sparkles } from 'lucide-react';
+import { ShieldCheck, MessageSquare, Edit3 } from 'lucide-react';
 
 // ─── Smart Suggestions Engine ────────────────────────────────────────────────
 type SuggestionContext = {

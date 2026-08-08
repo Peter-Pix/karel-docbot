@@ -1,6 +1,6 @@
 import React from 'react';
 import { RiskAnalysisResult, Risk } from '../types';
-import { ShieldAlert, AlertTriangle, CheckCircle, Info, Loader2, Sparkles, ArrowRight, Zap } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, CheckCircle, Info, Loader2, Sparkles, Zap } from 'lucide-react';
 
 interface RiskAnalysisPanelProps {
   analysis: RiskAnalysisResult | null;

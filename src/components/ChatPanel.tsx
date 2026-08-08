@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Message, ContractFields, ContractType } from '../types';
 import { getFieldKeys } from '../lib/contracts';
-import { Send, Bot, User, Loader2, Sparkles, Zap } from 'lucide-react';
+import { Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
 
 interface ChatPanelProps {
   messages: Message[];
