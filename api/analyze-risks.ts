@@ -22,22 +22,32 @@ async function queryOllamaChat(model: string, systemInstruction: string, prompt:
     body.format = "json";
   }
 
-  const response = await fetch(OLLAMA_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${OLLAMA_API_KEY}`
-    },
-    body: JSON.stringify(body)
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 25000);
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Ollama API error ${response.status}: ${errText}`);
+  try {
+    const response = await fetch(OLLAMA_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OLLAMA_API_KEY}`
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Ollama API error ${response.status}: ${errText}`);
+    }
+
+    const data = await response.json() as any;
+    return data?.message?.content || "";
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
   }
-
-  const data = await response.json() as any;
-  return data?.message?.content || "";
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -157,7 +167,7 @@ Odpověz VŽDY jako validní JSON dokument s těmito klíči: "risks", "safetySc
           id: "work-ip", title: "Nevyřešená autorská práva", level: "high",
           description: "Smlouva o dílo musí explicitně řešit převod autorských práv nebo licenci, jinak zůstávají u zhotovitele.",
           suggestion: "Doplňte doložku o převodu autorských práv na objednatele po zaplacení.",
-          targetText: "", replacementText: "Zhotovitel převádí veškerá autorská práva k dílu na Objednatele po úplném zaplacení ceny."
+          targetText: "Práva a povinnosti stran", replacementText: "Práva a povinnosti stran. Zhotovitel převádí veškerá autorská práva k dílu na Objednatele po úplném zaplacení ceny."
         });
         safetyScore -= 30;
       }

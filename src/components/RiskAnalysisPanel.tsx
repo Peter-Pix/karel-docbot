@@ -31,6 +31,7 @@ export function RiskAnalysisPanel({
       case 'medium':
         return <span className="apple-badge bg-[rgba(200,150,46,0.1)] text-[#c8962e] border border-[rgba(200,150,46,0.2)]"><AlertTriangle className="w-3 h-3" /> Střední</span>;
       case 'low':
+      default:
         return <span className="apple-badge bg-sky-950/60 text-sky-300 border border-sky-500/20"><Info className="w-3 h-3" /> Nízké</span>;
     }
   };
@@ -111,10 +112,10 @@ export function RiskAnalysisPanel({
             {/* Risks */}
             <div>
               <h3 className="text-xs font-semibold text-[#a1a1aa] mb-3 flex items-center gap-1.5">
-                Nalezená rizika ({analysis.risks.length})
+                Nalezená rizika ({analysis?.risks?.length || 0})
               </h3>
 
-              {analysis.risks.length === 0 ? (
+              {(!analysis?.risks || analysis.risks.length === 0) ? (
                 <div className="p-6 border border-dashed border-[rgba(255,255,255,0.08)] rounded-xl text-center text-xs text-[#71717a]">
                   <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
                   Smlouva je čistá.

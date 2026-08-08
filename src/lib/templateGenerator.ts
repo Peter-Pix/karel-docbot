@@ -201,6 +201,109 @@ export function generateContractHTML(
         </div>
       </div>
     `;
+  } else if (type === 'work') {
+    return `
+      <div class="text-center mb-8">
+        <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase mb-2">Smlouva o dílo</h1>
+        <p class="text-sm text-gray-500 italic">(uzavřená dle občanského zákoníku č. 89/2012 Sb.)</p>
+      </div>
+
+      <div class="space-y-6 text-justify leading-relaxed">
+        <div>
+          <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">Článek I. Smluvní strany</h2>
+          <p class="mb-2"><strong>1. Objednatel:</strong></p>
+          <p class="pl-4 mb-3">
+            Jméno/Název: ${renderVal('clientName', 'Jméno / název objednatele')} <br/>
+            IČO: ${renderVal('clientICO', 'IČO objednatele')} <br/>
+            Adresa: ${renderVal('clientAddress', 'Adresa objednatele')} <br/>
+            E-mail: ${renderVal('clientEmail', 'E-mail objednatele')} <br/>
+            (dále jen jako „Objednatel“ na straně jedné)
+          </p>
+          <p class="mb-2"><strong>2. Zhotovitel:</strong></p>
+          <p class="pl-4">
+            Jméno/Název: ${renderVal('employerName', 'Jméno / název zhotovitele')} <br/>
+            IČO: ${renderVal('employerICO', 'IČO zhotovitele')} <br/>
+            Adresa: ${renderVal('employerAddress', 'Adresa zhotovitele')} <br/>
+            E-mail: ${renderVal('employerEmail', 'E-mail zhotovitele')} <br/>
+            Telefon: ${renderVal('employerPhone', 'Telefon zhotovitele')} <br/>
+            (dále jen jako „Zhotovitel“ na straně druhé)
+          </p>
+        </div>
+
+        <div>
+          <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">Článek II. Předmět díla</h2>
+          <p>
+            1. Zhotovitel se zavazuje pro Objednatele vyhotovit dílo, jehož předmět je následující: 
+            <strong>${renderVal('workDescription', 'Předmět díla')}</strong>.
+          </p>
+          <p class="mt-2">
+            2. Dílo bude dokončeno a předáno Objednateli ke schválení do dne 
+            <strong>${renderVal('workDeadline', 'Termín dokončení')}</strong>.
+          </p>
+        </div>
+
+        <div>
+          <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">Článek III. Cena a platební podmínky</h2>
+          <p class="mb-2">
+            1. Smluvní strany se dohodly na ceně díla ve výši 
+            <strong>${renderVal('workPrice', 'Cena díla')}</strong>. Cena je uvedena 
+            <strong>${renderVal('workVat', 'S DPH / bez DPH')}</strong>.
+          </p>
+          <p>
+            2. Platební podmínky: <strong>${renderVal('paymentTerms', 'Platební podmínky')}</strong>.
+          </p>
+        </div>
+
+        <div>
+          <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">Článek IV. Místo plnění a předání</h2>
+          <p>
+            Dílo bude předáno na místě: <strong>${renderVal('workPlace', 'Místo plnění')}</strong>. Předáním se rozumí okamžik, kdy Objednatel písemně potvrdí převzetí díla.
+          </p>
+        </div>
+
+        <div>
+          <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">Článek V. Závazky a ochranné ustanovení</h2>
+          <p class="mb-2">
+            1. Doložka o mlčenlivosti: <strong>${renderVal('safeguardNDA', 'Doložka o mlčenlivosti')}</strong>.
+          </p>
+          <p class="mb-2">
+            2. Převod autorských práv: <strong>${renderVal('safeguardIP', 'Převod autorských práv')}</strong>.
+          </p>
+          <p>
+            3. Sankce za prodlení: <strong>${renderVal('safeguardPenalty', 'Sankce za prodlení')}</strong>.
+          </p>
+        </div>
+
+        <div>
+          <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">Článek VI. Závěrečná ustanovení</h2>
+          <p class="mb-2">
+            1. Práva a povinnosti stran neupravené touto smlouvou se řídí občanským zákoníkem České republiky a souvisejícími předpisy.
+          </p>
+          <p>
+            2. Veškeré spory budou rozhodovány podle práva: <strong>${renderVal('lawJurisdiction', 'Rozhodné právo')}</strong>.
+          </p>
+        </div>
+
+        <div>
+          <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">Článek VII. Podpisy smluvních stran</h2>
+          <p class="mb-6">Na důkaz souhlasu s celým obsahem této smlouvy připojují smluvní strany své vlastnoruční podpisy.</p>
+          <div class="grid grid-cols-2 gap-8 pt-8 text-center text-sm">
+            <div>
+              <div class="border-t border-gray-400 w-48 mx-auto mt-4 pt-1">
+                <strong>Objednatel</strong><br/>
+                ${fields.clientName || '........................................'}
+              </div>
+            </div>
+            <div>
+              <div class="border-t border-gray-400 w-48 mx-auto mt-4 pt-1">
+                <strong>Zhotovitel</strong><br/>
+                ${fields.employerName || '........................................'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
   } else {
     return `
       <div class="text-center mb-8">

@@ -262,8 +262,30 @@ export default function App() {
       if (!response.ok) throw new Error('Chyba při analýze rizik');
 
       const data = await response.json();
-      setRiskAnalysis(data);
-      showToast('info', `Analýza dokončena: ${data.risks?.length || 0} rizik nalezeno. Skóre: ${data.safetyScore}%.`);
+
+      // Defensive validation — API may return malformed JSON from LLM
+      const validated: RiskAnalysisResult = {
+        risks: Array.isArray(data?.risks) ? data.risks : [],
+        safetyScore: typeof data?.safetyScore === 'number' ? data.safetyScore : 50,
+        summary: typeof data?.summary === 'string' ? data.summary : 'Analýza byla dokončena.',
+      };
+
+      // Ensure every risk has required fields
+      validated.risks = validated.risks
+        .filter((r: any) => r && typeof r.id === 'string')
+        .map((r: any) => ({
+          id: r.id,
+          title: typeof r.title === 'string' ? r.title : 'Neznámé riziko',
+          level: ['low', 'medium', 'high'].includes(r.level) ? r.level : 'medium',
+          description: typeof r.description === 'string' ? r.description : '',
+          suggestion: typeof r.suggestion === 'string' ? r.suggestion : '',
+          targetText: typeof r.targetText === 'string' ? r.targetText : '',
+          replacementText: typeof r.replacementText === 'string' ? r.replacementText : '',
+          applied: Boolean(r.applied),
+        }));
+
+      setRiskAnalysis(validated);
+      showToast('info', `Analýza dokončena: ${validated.risks.length} rizik nalezeno. Skóre: ${validated.safetyScore}%.`);
     } catch (err) {
       console.error(err);
       showToast('error', 'Nepodařilo se spojit s AI službou. Zkuste to prosím znovu za chvíli.');
@@ -274,7 +296,10 @@ export default function App() {
 
   // ── Apply risk fix ──
   const handleApplyRiskFix = useCallback((riskId: string, targetText: string, replacementText: string) => {
-    setFields(prev => {
+    if (!targetText || !replacementText) {
+      showToast('warning', 'Toto riziko nemá automatickou opravu. Upravte text ručně.');
+      return;
+    }    setFields(prev => {
       const updated = { ...prev };
       for (const k in updated) {
         const key = k as keyof ContractFields;

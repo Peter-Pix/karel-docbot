@@ -47,8 +47,8 @@ const STEP_TO_FIELDS: Record<FlowStepId, string[]> = {
   select_counterparty: [],
   work_subject: ['predmet_dila'],
   work_template: [],
-  work_details: ['predmet_dila', 'termin_plneni'],
-  pricing: ['cena', 'datum_platby'],
+  work_details: ['workDescription', 'workDeadline'],
+  pricing: ['workPrice', 'paymentTerms'],
   safeguards: ['autorska_prava', 'smluvni_pokuta'],
   preview: [],
   export: [],
@@ -572,8 +572,8 @@ function WorkDetailsStep({
             Popis díla
           </label>
           <textarea
-            value={currentFields.predmet_dila || ''}
-            onChange={(e) => onUpdate({ predmet_dila: e.target.value })}
+            value={currentFields.workDescription || ''}
+            onChange={(e) => onUpdate({ workDescription: e.target.value })}
             rows={4}
             placeholder="Co přesně má být výsledkem..."
             className="apple-input w-full resize-none"
@@ -585,8 +585,8 @@ function WorkDetailsStep({
           </label>
           <input
             type="text"
-            value={currentFields.termin_plneni || ''}
-            onChange={(e) => onUpdate({ termin_plneni: e.target.value })}
+            value={currentFields.workDeadline || ''}
+            onChange={(e) => onUpdate({ workDeadline: e.target.value })}
             placeholder="např. 30. září 2026"
             className="apple-input w-full"
           />
@@ -595,7 +595,7 @@ function WorkDetailsStep({
 
       <button
         onClick={onContinue}
-        disabled={!currentFields.predmet_dila?.trim()}
+        disabled={!currentFields.workDescription?.trim()}
         className="btn-apple-primary w-full mt-6 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Pokračovat
@@ -626,8 +626,8 @@ function PricingStep({
           </label>
           <input
             type="number"
-            value={currentFields.cena || ''}
-            onChange={(e) => onUpdate({ cena: e.target.value })}
+            value={currentFields.workPrice || ''}
+            onChange={(e) => onUpdate({ workPrice: e.target.value })}
             placeholder="45000"
             className="apple-input w-full font-mono"
           />
@@ -638,9 +638,9 @@ function PricingStep({
           </label>
           <input
             type="number"
-            value={currentFields.datum_platby || ''}
-            onChange={(e) => onUpdate({ datum_platby: e.target.value })}
-            placeholder="14"
+            value={currentFields.paymentTerms || ''}
+            onChange={(e) => onUpdate({ paymentTerms: e.target.value })}
+            placeholder="např. Záloha 50 %, zbytek po předání"
             className="apple-input w-full font-mono"
           />
         </div>
@@ -648,7 +648,7 @@ function PricingStep({
 
       <button
         onClick={onContinue}
-        disabled={!currentFields.cena?.trim()}
+        disabled={!currentFields.workPrice?.trim()}
         className="btn-apple-primary w-full mt-6 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Pokračovat
@@ -660,15 +660,15 @@ function PricingStep({
 
 function SafeguardsStep({ onContinue }: { onContinue: () => void }) {
   const [safeguards, setSafeguards] = useState({
-    copyright: true,
+    ip: true,
     penalty: true,
     nda: true,
     jurisdiction: true,
   });
 
   const items = [
-    { key: 'copyright' as const, label: 'Převod autorských práv', desc: 'Dílo je po zaplacení vaše.' },
-    { key: 'penalty' as const, label: 'Smluvní pokuta za prodlení', desc: '0,05 % z ceny za každý den.' },
+    { key: 'ip' as const, label: 'Převod autorských práv', desc: 'Dílo je po zaplacení vaše.' },
+    { key: 'penalty' as const, label: 'Sankce za prodlení', desc: 'Smluvní pokuta za každý den zpoždění.' },
     { key: 'nda' as const, label: 'Mlčenlivost (NDA)', desc: 'Oba chráníme důvěrné informace.' },
     { key: 'jurisdiction' as const, label: 'České právo', desc: 'Smlouva se řídí českým právem.' },
   ];
@@ -735,10 +735,10 @@ function PreviewStep({
       <p className="text-[#71717a] mb-6">Mrkni na preview vpravo. Všechno je připravené.</p>
 
       <div className="bg-[rgba(255,255,255,0.03)] rounded-xl border border-[rgba(255,255,255,0.06)] p-5 space-y-3 flex-1">
-        <SummaryRow label="Předmět" value={fields.predmet_dila} />
-        <SummaryRow label="Termín" value={fields.termin_plneni} />
-        <SummaryRow label="Cena" value={fields.cena ? `${fields.cena} Kč` : null} />
-        <SummaryRow label="Splatnost" value={fields.datum_platby ? `${fields.datum_platby} dní` : null} />
+        <SummaryRow label="Předmět" value={fields.workDescription} />
+        <SummaryRow label="Termín" value={fields.workDeadline} />
+        <SummaryRow label="Cena" value={fields.workPrice} />
+        <SummaryRow label="Platba" value={fields.paymentTerms} />
       </div>
 
       <button
