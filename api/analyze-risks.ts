@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
-const OLLAMA_ENDPOINT = 'https://ollama.com/api/chat';
+const OLLAMA_ENDPOINT = process.env.OLLAMA_API_ENDPOINT || 'https://ollama.com/api/chat';
 
 async function queryOllamaChat(model: string, systemInstruction: string, prompt: string, jsonFormat: boolean = false): Promise<string> {
   if (!OLLAMA_API_KEY) {

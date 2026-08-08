@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
-const OLLAMA_ENDPOINT = 'https://ollama.com/api/chat';
+const OLLAMA_ENDPOINT = process.env.OLLAMA_API_ENDPOINT || 'https://ollama.com/api/chat';
 
 const ndaFields = [
   { key: "poskytovatel", label: "Poskytovatel", prompt: "Jaké je celé jméno nebo název firmy Poskytovatele důvěrných informací?" },
