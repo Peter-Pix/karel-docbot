@@ -1,8 +1,6 @@
-// api/parse-entity-multi.ts
-// AI parser pro VÍCE ZDROJŮ najednou — sjednotí je do jedné entity.
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { buildMultiParserSystemPrompt, buildMultiParserUserPrompt } from '../src/lib/aiParser';
+import { checkRateLimit, getClientIP } from '../shared/rateLimit';
 
 const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
 const OLLAMA_ENDPOINT = process.env.OLLAMA_API_ENDPOINT || 'https://ollama.com/api/chat';
@@ -36,17 +34,13 @@ async function fetchUrlContent(url: string): Promise<string> {
       .replace(/<[^>]+>/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
-    return text.slice(0, 4000); // 4 KB per URL — menší než single, jich je víc
+    return text.slice(0, 4000);
   } catch (err) {
     console.warn('[parse-entity-multi] URL fetch failed:', err);
     return '';
   }
 }
 
-/**
- * Připraví všechny zdroje do jednoho textového payloadu.
- * Obrázky se posílají zvlášť jako multimodal pole.
- */
 async function prepareSources(sources: SourceInput[]): Promise<{
   textPayload: string;
   images: string[];
@@ -71,7 +65,6 @@ async function prepareSources(sources: SourceInput[]): Promise<{
         textParts.push(`[${label} - WEB ${s.url}]\n[URL se nepodařilo načíst]`);
       }
     } else if (s.imageBase64) {
-      // Pro obrázek: pošleme placeholder text + přidáme image do multimodal
       textParts.push(`[${label} - OBRÁZEK (data v images[${images.length}])]`);
       images.push(s.imageBase64);
     }
@@ -139,6 +132,22 @@ async function queryOllamaMulti(
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Rate limit: 10 requests per minute per IP (multi-source is expensive)
+  const ip = getClientIP(req);
+  const rateLimit = checkRateLimit(`parse-entity-multi:${ip}`, 10, 60_000);
+  
+  res.setHeader('X-RateLimit-Limit', '10');
+  res.setHeader('X-RateLimit-Remaining', String(rateLimit.remaining));
+  res.setHeader('X-RateLimit-Reset', String(rateLimit.resetAt));
+  
+  if (!rateLimit.allowed) {
+    return res.status(429).json({ 
+      success: false,
+      error: 'Příliš mnoho požadavků. Zkuste to prosím za chvíli.',
+      retryAfter: Math.ceil((rateLimit.resetAt - Date.now()) / 1000),
+    });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -161,10 +170,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Připrav zdroje
     const prepared = await prepareSources(sources);
 
-    // Sestav prompty
     const systemPrompt = buildMultiParserSystemPrompt(mode);
     const userPrompt = buildMultiParserUserPrompt(
       prepared.sourceLabels.map((label, i) => ({
@@ -198,19 +205,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const mergedData = parsed.merged || parsed;
       const sourceResults = parsed.sources || [];
 
+      const normalizeEntity = (raw: any) => {
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
+        const mapped: any = { ...raw };
+        if (!mapped.fullName && mapped.name) mapped.fullName = mapped.name;
+        if (!mapped.businessName && mapped.company) mapped.businessName = mapped.company;
+        if (!mapped.businessName && mapped.organization) mapped.businessName = mapped.organization;
+        if (!mapped.email && mapped.e_mail) mapped.email = mapped.e_mail;
+        if (!mapped.phone && mapped.telephone) mapped.phone = mapped.telephone;
+        if (!mapped.phone && mapped.tel) mapped.phone = mapped.tel;
+        if (!mapped.bankAccount && mapped.account) mapped.bankAccount = mapped.account;
+        if (!mapped.ico && mapped.ic) mapped.ico = mapped.ic;
+        if (!mapped.dic && mapped.vat) mapped.dic = mapped.vat;
+        if (mapped.address && typeof mapped.address === 'object' && !Array.isArray(mapped.address)) {
+          if (!mapped.street && mapped.address.street) mapped.street = mapped.address.street;
+          if (!mapped.city && mapped.address.city) mapped.city = mapped.address.city;
+          if (!mapped.zip && mapped.address.zip) mapped.zip = mapped.address.zip;
+          if (!mapped.zip && mapped.address.postalCode) mapped.zip = mapped.address.postalCode;
+        }
+        mapped.missingFields = Array.isArray(raw.missingFields) ? raw.missingFields : [];
+        mapped.confidence = typeof raw.confidence === 'number' ? raw.confidence : 0.7;
+        return mapped;
+      };
+
       return res.json({
         success: true,
         merged: {
-          myProfile: mergedData.myProfile || undefined,
-          counterparty: mergedData.counterparty || undefined,
+          myProfile: normalizeEntity(mergedData.myProfile),
+          counterparty: normalizeEntity(mergedData.counterparty),
           workTemplate: mergedData.workTemplate || undefined,
           contractData: mergedData.contractData || undefined,
           confidence: typeof mergedData.confidence === 'number' ? mergedData.confidence : 0.7,
           missingFields: Array.isArray(mergedData.missingFields) ? mergedData.missingFields : [],
         },
         sources: sourceResults.map((s: any) => ({
-          myProfile: s.myProfile || undefined,
-          counterparty: s.counterparty || undefined,
+          myProfile: normalizeEntity(s.myProfile),
+          counterparty: normalizeEntity(s.counterparty),
           workTemplate: s.workTemplate || undefined,
           contractData: s.contractData || undefined,
           confidence: typeof s.confidence === 'number' ? s.confidence : 0.5,

@@ -1,9 +1,6 @@
-// api/parse-entity.ts
-// AI parser endpoint — extrakce entit z textu/fotky/URL.
-// Jeden univerzální endpoint pro Smart Paste a Vision Input.
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { buildParserSystemPrompt, buildParserUserPrompt } from '../src/lib/aiParser';
+import { checkRateLimit, getClientIP } from '../shared/rateLimit';
 
 const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
 const OLLAMA_ENDPOINT = process.env.OLLAMA_API_ENDPOINT || 'https://ollama.com/api/chat';
@@ -31,7 +28,6 @@ async function queryOllamaVision(
 
   const userMessage: any = { role: 'user', content: userText };
 
-  // Pokud je obrázek, přidej ho jako multimodal content
   if (imageBase64) {
     userMessage.images = [imageBase64];
     userMessage.content = userText || 'Extrahuj z tohoto obrázku (vizitky/faktury) všechny údaje o osobách a firmách.';
@@ -45,7 +41,7 @@ async function queryOllamaVision(
     ],
     stream: false,
     format: 'json',
-    options: { temperature: 0.1 }, // Nízká teplota = konzistentní extrakce
+    options: { temperature: 0.1 },
   };
 
   const controller = new AbortController();
@@ -80,18 +76,17 @@ async function fetchUrlContent(url: string): Promise<string> {
   try {
     const response = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DocBot/1.0)' },
-      signal: AbortSignal.timeout(8000), // 8s timeout
+      signal: AbortSignal.timeout(8000),
     });
     if (!response.ok) return '';
     const html = await response.text();
-    // Velmi jednoduchý extraktor textu z HTML — odstraníme tagy
     const text = html
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
       .replace(/<[^>]+>/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
-    return text.slice(0, 6000); // Ořez na 6 KB textu
+    return text.slice(0, 6000);
   } catch (err) {
     console.warn('[parse-entity] URL fetch failed:', err);
     return '';
@@ -99,6 +94,22 @@ async function fetchUrlContent(url: string): Promise<string> {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Rate limit: 15 requests per minute per IP
+  const ip = getClientIP(req);
+  const rateLimit = checkRateLimit(`parse-entity:${ip}`, 15, 60_000);
+  
+  res.setHeader('X-RateLimit-Limit', '15');
+  res.setHeader('X-RateLimit-Remaining', String(rateLimit.remaining));
+  res.setHeader('X-RateLimit-Reset', String(rateLimit.resetAt));
+  
+  if (!rateLimit.allowed) {
+    return res.status(429).json({ 
+      success: false,
+      error: 'Příliš mnoho požadavků. Zkuste to prosím za chvíli.',
+      retryAfter: Math.ceil((rateLimit.resetAt - Date.now()) / 1000),
+    });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -114,7 +125,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Pokud je URL, stáhni obsah
     let inputText = text || '';
     if (url && !text) {
       inputText = await fetchUrlContent(url);
@@ -130,7 +140,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       inputText = `[Hint: ${hint}]\n\n${inputText}`;
     }
 
-    // Sestav prompt
     const systemPrompt = buildParserSystemPrompt('counterparty');
     const userPrompt = buildParserUserPrompt(inputText, contractType, 'counterparty');
 
@@ -143,14 +152,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         imageMimeType
       );
 
-      // Vyčistíme případné markdown bloky
       const cleaned = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
 
       let parsed: any;
       try {
         parsed = JSON.parse(cleaned);
       } catch {
-        // Fallback: zkus najít JSON uvnitř stringu
         const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           parsed = JSON.parse(jsonMatch[0]);
@@ -159,14 +166,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
-      // Normalize AI output defensively
       const normalizeEntity = (raw: any) => {
-        if (!raw || typeof raw !== 'object') return undefined;
-        return {
-          ...raw,
-          missingFields: Array.isArray(raw.missingFields) ? raw.missingFields : [],
-          confidence: typeof raw.confidence === 'number' ? raw.confidence : 0.7,
-        };
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
+        const mapped: any = { ...raw };
+        if (!mapped.fullName && mapped.name) mapped.fullName = mapped.name;
+        if (!mapped.businessName && mapped.company) mapped.businessName = mapped.company;
+        if (!mapped.businessName && mapped.organization) mapped.businessName = mapped.organization;
+        if (!mapped.email && mapped.e_mail) mapped.email = mapped.e_mail;
+        if (!mapped.phone && mapped.telephone) mapped.phone = mapped.telephone;
+        if (!mapped.phone && mapped.tel) mapped.phone = mapped.tel;
+        if (!mapped.bankAccount && mapped.account) mapped.bankAccount = mapped.account;
+        if (!mapped.ico && mapped.ic) mapped.ico = mapped.ic;
+        if (!mapped.dic && mapped.vat) mapped.dic = mapped.vat;
+
+        if (mapped.address && typeof mapped.address === 'object' && !Array.isArray(mapped.address)) {
+          if (!mapped.street && mapped.address.street) mapped.street = mapped.address.street;
+          if (!mapped.city && mapped.address.city) mapped.city = mapped.address.city;
+          if (!mapped.zip && mapped.address.zip) mapped.zip = mapped.address.zip;
+          if (!mapped.zip && mapped.address.postalCode) mapped.zip = mapped.address.postalCode;
+        }
+
+        mapped.missingFields = Array.isArray(raw.missingFields) ? raw.missingFields : [];
+        mapped.confidence = typeof raw.confidence === 'number' ? raw.confidence : 0.7;
+        return mapped;
       };
 
       return res.json({

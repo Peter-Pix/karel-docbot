@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { checkRateLimit, getClientIP } from '../shared/rateLimit';
 
 const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
 const OLLAMA_ENDPOINT = process.env.OLLAMA_API_ENDPOINT || 'https://ollama.com/api/chat';
@@ -51,6 +52,21 @@ async function queryOllamaChat(model: string, systemInstruction: string, prompt:
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Rate limit: 10 requests per minute per IP (risk analysis is expensive)
+  const ip = getClientIP(req);
+  const rateLimit = checkRateLimit(`analyze-risks:${ip}`, 10, 60_000);
+  
+  res.setHeader('X-RateLimit-Limit', '10');
+  res.setHeader('X-RateLimit-Remaining', String(rateLimit.remaining));
+  res.setHeader('X-RateLimit-Reset', String(rateLimit.resetAt));
+  
+  if (!rateLimit.allowed) {
+    return res.status(429).json({ 
+      error: 'Příliš mnoho požadavků. Zkuste to prosím za chvíli.',
+      retryAfter: Math.ceil((rateLimit.resetAt - Date.now()) / 1000),
+    });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -64,7 +80,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const systemInstruction = `Jsi DocuGenius AI, přední český právní analytik a expert na revize smluv.
-Tvým úkolem je důkladně analyzovat finální text/HTML smlouvy typu ${contractType.toUpperCase()} a identifikovat potenciální rizika pro uživatele.
+Tvým úkolem je důkladně analyzovat finální text/HTML smlouvy typu ${contractType?.toUpperCase() || 'SMLOUVA'} a identifikovat potenciální rizika pro uživatele.
 
 Vyhodnoť také celkové skóre bezpečnosti smlouvy ('safetyScore') od 0 do 100 (100 = zcela bezpečné) a napiš stručné celkové právní shrnutí ('summary') v češtině.
 Pro každé nalezené riziko uveď:
@@ -205,7 +221,7 @@ Odpověz VŽDY jako validní JSON dokument s těmito klíči: "risks", "safetySc
       summary = `Analýza odhalila ${risksList.length} právních rizik či rozporů s platnou legislativou ČR.`;
     }
 
-    res.json({ risks: risksList, safetyScore: Math.max(0, safetyScore), summary });
+    res.json({ risks: risksList, safetyScore: Math.max(0, safetyScore), summary, _fallback: true });
 
   } catch (error: any) {
     console.error("Error in DocBot Risk Analysis:", error);
