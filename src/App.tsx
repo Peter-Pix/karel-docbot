@@ -8,6 +8,7 @@ import { FieldsEditorPanel } from './components/FieldsEditorPanel';
 import { SettingsModal } from './components/SettingsModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useToast } from './components/Toast';
+import { AdaptiveFlowWizard } from './components/AdaptiveFlowWizard';
 import { ContractType, Message, ContractFields, RiskAnalysisResult } from './types';
 import { getDefaultFields, getContractTitle, generateContractHTML } from './lib/templateGenerator';
 import { getFieldKeys } from './lib/contracts';
@@ -79,6 +80,9 @@ export default function App() {
   // Model — deepseek-v4-flash as primary
   const [selectedModel, setSelectedModel] = useState<string>('deepseek-v4-flash');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // Adaptive Flow Wizard
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
 
   // Risk analysis
   const [riskAnalysis, setRiskAnalysis] = useState<RiskAnalysisResult | null>(null);
@@ -328,6 +332,7 @@ export default function App() {
         onResetContract={handleResetContract}
         selectedModel={selectedModel}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenWizard={contractType ? () => setIsWizardOpen(true) : undefined}
       />
 
       <main className="flex-grow w-full max-w-7xl mx-auto px-4 py-6 md:py-8 flex flex-col">
@@ -423,6 +428,18 @@ export default function App() {
         selectedModel={selectedModel}
         onSelectModel={setSelectedModel}
       />
+
+      {/* Adaptive Flow Wizard — nový adaptivní UX */}
+      {isWizardOpen && contractType && (
+        <AdaptiveFlowWizard
+          contractType={contractType}
+          currentFields={fields as unknown as Record<string, string>}
+          onFieldsUpdate={(updates) => {
+            setFields((prev) => ({ ...prev, ...updates }));
+          }}
+          onClose={() => setIsWizardOpen(false)}
+        />
+      )}
     </div>
   );
 }

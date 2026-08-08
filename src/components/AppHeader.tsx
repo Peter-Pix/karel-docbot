@@ -1,5 +1,5 @@
 import React from 'react';
-import { Scale, ArrowLeft, RefreshCw, FileText, Settings } from 'lucide-react';
+import { Scale, ArrowLeft, RefreshCw, FileText, Settings, Sparkles } from 'lucide-react';
 import { ContractType } from '../types';
 import { getContractTitle } from '../lib/templateGenerator';
 
@@ -9,6 +9,7 @@ interface AppHeaderProps {
   onResetContract: () => void;
   selectedModel: string;
   onOpenSettings: () => void;
+  onOpenWizard?: () => void;
 }
 
 export function AppHeader({
@@ -17,6 +18,7 @@ export function AppHeader({
   onResetContract,
   selectedModel,
   onOpenSettings,
+  onOpenWizard,
 }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full bg-zinc-950/80 backdrop-blur-2xl border-b border-zinc-800/60">
@@ -53,6 +55,17 @@ export function AppHeader({
 
         {/* Right */}
         <div className="flex items-center gap-1.5">
+          {contractType && onOpenWizard && (
+            <button
+              onClick={onOpenWizard}
+              className="flex items-center gap-1.5 text-xs font-medium text-amber-400 hover:text-amber-300 px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition-all cursor-pointer"
+              title="Nový adaptivní průvodce"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Nový průvodce</span>
+            </button>
+          )}
+
           <button
             onClick={onOpenSettings}
             className="flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-100 px-2.5 py-1.5 rounded-xl hover:bg-zinc-800/60 transition-all cursor-pointer"
