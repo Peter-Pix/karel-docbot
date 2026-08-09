@@ -1,0 +1,111 @@
+{
+  "timestamp": "2026-08-09T01:59:00+02:00",
+  "vitest": {
+    "summary": {
+      "total": 57,
+      "passed": 57,
+      "failed": 0,
+      "duration": 340
+    },
+    "coverage": {
+      "summary": {
+        "statements": 84.55,
+        "branches": 76.81,
+        "functions": 88,
+        "lines": 86.72
+      },
+      "files": {
+        "shared/contracts.ts": {
+          "statements": 91.66,
+          "branches": 0,
+          "functions": 80,
+          "lines": 90.9
+        },
+        "src/lib/contracts.ts": {
+          "statements": 90.62,
+          "branches": 87.5,
+          "functions": 92.3,
+          "lines": 87.5
+        },
+        "src/lib/sanitize.ts": {
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "lines": 100
+        },
+        "src/lib/sessionStore.ts": {
+          "statements": 65.38,
+          "branches": 60,
+          "functions": 100,
+          "lines": 72.72
+        },
+        "src/lib/validation.ts": {
+          "statements": 84,
+          "branches": 80.85,
+          "functions": 50,
+          "lines": 87.8
+        }
+      }
+    }
+  },
+  "rateLimiter": {
+    "benchmark": {
+      "durationMs": 1,
+      "results": [
+        {"request": 1, "allowed": true, "remaining": 19},
+        {"request": 2, "allowed": true, "remaining": 18},
+        {"request": 3, "allowed": true, "remaining": 17},
+        {"request": 4, "allowed": true, "remaining": 16},
+        {"request": 5, "allowed": true, "remaining": 15},
+        {"request": 6, "allowed": true, "remaining": 14},
+        {"request": 7, "allowed": true, "remaining": 13},
+        {"request": 8, "allowed": true, "remaining": 12},
+        {"request": 9, "allowed": true, "remaining": 11},
+        {"request": 10, "allowed": true, "remaining": 10},
+        {"request": 11, "allowed": true, "remaining": 9},
+        {"request": 12, "allowed": true, "remaining": 8},
+        {"request": 13, "allowed": true, "remaining": 7},
+        {"request": 14, "allowed": true, "remaining": 6},
+        {"request": 15, "allowed": true, "remaining": 5},
+        {"request": 16, "allowed": true, "remaining": 4},
+        {"request": 17, "allowed": true, "remaining": 3},
+        {"request": 18, "allowed": true, "remaining": 2},
+        {"request": 19, "allowed": true, "remaining": 1},
+        {"request": 20, "allowed": true, "remaining": 0},
+        {"request": 21, "allowed": false, "remaining": 0},
+        {"request": 22, "allowed": false, "remaining": 0},
+        {"request": 23, "allowed": false, "remaining": 0},
+        {"request": 24, "allowed": false, "remaining": 0},
+        {"request": 25, "allowed": false, "remaining": 0}
+      ]
+    },
+    "endpoints": {
+      "/api/chat": {
+        "limit": 20,
+        "windowMs": 60000
+      },
+      "/api/analyze-risks": {
+        "limit": 10,
+        "windowMs": 60000
+      },
+      "/api/parse-entity": {
+        "limit": 15,
+        "windowMs": 60000
+      },
+      "/api/parse-entity-multi": {
+        "limit": 10,
+        "windowMs": 60000
+      }
+    }
+  },
+  "performance": {
+    "build": {
+      "duration": 2740,
+      "size": {
+        "js": 464390,
+        "css": 44440,
+        "html": 1610
+      }
+    }
+  }
+}
