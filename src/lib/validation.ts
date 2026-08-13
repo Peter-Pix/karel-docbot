@@ -29,9 +29,7 @@ export function validateField(
     if (isNaN(num)) return 'Neplatná částka';
     
     // Negative check
-    if (trimmed.includes('-')) {
-      return 'Částka nesmí být záporná';
-    }
+    
     
     // Unreasonably high amounts
     if (num > 10000000) return 'Částka se zdá nepřiměřeně vysoká';

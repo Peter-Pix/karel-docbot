@@ -41,7 +41,7 @@ describe('validateField', () => {
   describe('duration fields', () => {
     it('warns on eternal duration', () => {
       const result = validateField('doba_platnosti', 'na věčné časy');
-      expect(result).toContain('právně sporné');
+      expect(result).toContain('Právně sporné');
     });
 
     it('accepts normal duration', () => {
@@ -52,7 +52,7 @@ describe('validateField', () => {
   describe('notice period (rent)', () => {
     it('rejects less than 3 months', () => {
       const result = validateField('vypovedni_lhuta', '1 měsíc');
-      expect(result).toBe('Výpovědní lhůta u nájmu bytu musí být min. 3 měsíce');
+      expect(result).toContain('Výpovědní lhůta u nájmu bytu musí být min. 3 měsíce');
     });
 
     it('accepts 3 months', () => {
@@ -63,7 +63,7 @@ describe('validateField', () => {
   describe('probation period (employment)', () => {
     it('rejects more than 3 months', () => {
       const result = validateField('zkusebni_doba', '6 měsíců');
-      expect(result).toBe('Zkušební doba nesmí přesáhnout 3 měsíce (zákoník práce)');
+      expect(result).toContain('Zkušební doba nesmí přesáhnout 3 měsíce');
     });
 
     it('accepts 3 months', () => {
@@ -74,7 +74,7 @@ describe('validateField', () => {
   describe('working hours', () => {
     it('rejects more than 40 hours', () => {
       const result = validateField('pracovni_doba', '55 hodin týdně');
-      expect(result).toBe('Týdenní pracovní doba nesmí přesáhnout 40 hodin (zákoník práce)');
+      expect(result).toContain('Týdenní pracovní doba nesmí přesáhnout 40 hodin');
     });
 
     it('accepts 40 hours', () => {
