@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 3202",
     "dev:api": "tsx server/dev-server.ts",
     "dev:full": "concurrently \"pnpm dev:api\" \"pnpm dev\"",
     "build": "vite build",
