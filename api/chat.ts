@@ -9,9 +9,7 @@ import {
   getAdvice,
 } from '../shared/contracts';
 import { checkRateLimit, getClientIP } from '../shared/rateLimit';
-
-const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
-const OLLAMA_ENDPOINT = process.env.OLLAMA_API_ENDPOINT || 'https://ollama.com/api/chat';
+import { DEFAULT_MODEL, queryOllama } from '../shared/ollama';
 
 // ─── Fallback Logic ─────────────────────────────────────────────────
 
@@ -106,48 +104,6 @@ function smartLocalChatFallback(contractType: string, messages: any[], currentFi
   };
 }
 
-// ─── Ollama API ──────────────────────────────────────────────────────
-
-async function queryOllamaChat(model: string, systemInstruction: string, messages: any[], jsonFormat: boolean = false): Promise<string> {
-  if (!OLLAMA_API_KEY) {
-    throw new Error("OLLAMA_API_KEY not configured");
-  }
-
-  const body: any = {
-    model,
-    messages: [
-      { role: "system", content: systemInstruction },
-      ...messages.map((m: any) => ({
-        role: m.sender === "assistant" ? "assistant" : "user",
-        content: m.text
-      }))
-    ],
-    stream: false,
-    options: { temperature: 0.3 }
-  };
-
-  if (jsonFormat) {
-    body.format = "json";
-  }
-
-  const response = await fetch(OLLAMA_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${OLLAMA_API_KEY}`
-    },
-    body: JSON.stringify(body)
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Ollama API error ${response.status}: ${errText}`);
-  }
-
-  const data = await response.json() as any;
-  return data?.message?.content || "";
-}
-
 // ─── Build fields prompt from shared schema ─────────────────────────
 
 function buildFieldsPrompt(contractType: string): string {
@@ -179,7 +135,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { contractType, messages, currentFields, selectedModel } = req.body;
-    const modelToUse = selectedModel || "deepseek-v4-flash";
+    const modelToUse = selectedModel || DEFAULT_MODEL;
 
     if (!contractType) {
       return res.status(400).json({ error: "contractType is required" });
@@ -209,7 +165,17 @@ Tvoje striktní pravidla chování:
 Odpověz VŽDY jako validní JSON dokument s těmito klíči: "reply", "extractedFields", "lastUpdatedField", "isFinished", "nextSuggestedPrompts".`;
 
     try {
-      const responseText = await queryOllamaChat(modelToUse, systemInstruction, messages, true);
+      const responseText = await queryOllama(
+        modelToUse,
+        [
+          { role: 'system', content: systemInstruction },
+          ...messages.map((m: any) => ({
+            role: m.sender === 'assistant' ? 'assistant' : 'user',
+            content: m.text,
+          })),
+        ],
+        { temperature: 0.3, format: 'json' }
+      );
       if (responseText) {
         const cleanedText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
         const parsed = JSON.parse(cleanedText);

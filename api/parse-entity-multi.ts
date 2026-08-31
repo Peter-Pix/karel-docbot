@@ -1,10 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { buildMultiParserSystemPrompt, buildMultiParserUserPrompt } from '../src/lib/aiParser';
 import { checkRateLimit, getClientIP } from '../shared/rateLimit';
-
-const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
-const OLLAMA_ENDPOINT = process.env.OLLAMA_API_ENDPOINT || 'https://ollama.com/api/chat';
-const DEFAULT_MODEL = process.env.OLLAMA_PARSER_MODEL || 'gemma4:31b-cloud';
+import { DEFAULT_MODEL, queryOllama } from '../shared/ollama';
 
 interface SourceInput {
   text?: string;
@@ -77,60 +74,6 @@ async function prepareSources(sources: SourceInput[]): Promise<{
   };
 }
 
-async function queryOllamaMulti(
-  model: string,
-  systemInstruction: string,
-  userText: string,
-  images: string[]
-): Promise<string> {
-  if (!OLLAMA_API_KEY) {
-    throw new Error('OLLAMA_API_KEY not configured');
-  }
-
-  const userMessage: any = { role: 'user', content: userText };
-  if (images.length > 0) {
-    userMessage.images = images;
-  }
-
-  const body = {
-    model,
-    messages: [
-      { role: 'system', content: systemInstruction },
-      userMessage,
-    ],
-    stream: false,
-    format: 'json',
-    options: { temperature: 0.1 },
-  };
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000);
-
-  try {
-    const response = await fetch(OLLAMA_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${OLLAMA_API_KEY}`,
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Ollama API error ${response.status}: ${errText}`);
-    }
-
-    const data = (await response.json()) as any;
-    return data?.message?.content || '';
-  } catch (err) {
-    clearTimeout(timeoutId);
-    throw err;
-  }
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Rate limit: 10 requests per minute per IP (multi-source is expensive)
   const ip = getClientIP(req);
@@ -181,11 +124,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     );
 
     try {
-      const responseText = await queryOllamaMulti(
+      const userMessage: any = { role: 'user', content: userPrompt };
+      if (prepared.images.length > 0) {
+        userMessage.images = prepared.images;
+      }
+      const responseText = await queryOllama(
         DEFAULT_MODEL,
-        systemPrompt,
-        userPrompt,
-        prepared.images
+        [
+          { role: 'system', content: systemPrompt },
+          userMessage,
+        ],
+        { temperature: 0.1, format: 'json' }
       );
 
       const cleaned = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();

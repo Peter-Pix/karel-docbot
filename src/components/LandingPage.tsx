@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { FileText, Check, Shield } from 'lucide-react';
+import { DisclaimerBanner } from './DisclaimerBanner';
 
 interface LandingPageProps {
   onStart: () => void;
@@ -23,12 +24,12 @@ export function LandingPage({ onStart }: LandingPageProps) {
         {/* Slogan */}
         <div className="space-y-4">
           <p className="text-[#71717a] text-sm font-medium tracking-widest uppercase eyebrow">
-            Smlouva je problém?
+            Smlouvy za 3 minuty místo 40
           </p>
           <h1 className="text-5xl md:text-6xl font-bold tracking-tight leading-tight text-[#f4f4f5]">
-            DocBot
+            Vrať si čas,
             <br />
-            <span className="font-normal text-[#a1a1aa]">řeší problémy.</span>
+            <span className="font-normal text-[#a1a1aa]">peníze a nervy.</span>
           </h1>
         </div>
 
@@ -43,7 +44,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
           </button>
 
           <p className="text-[#71717a] text-sm">
-            Žádné formuláře. Žádné vysvětlování. 15 sekund.
+            Smlouva, co ti dnes zabere 40 minut, je hotová za 3. Bez formulářů, bez vysvětlování.
           </p>
         </div>
 
@@ -98,13 +99,13 @@ export function LandingPage({ onStart }: LandingPageProps) {
             {[
               {
                 icon: FileText,
-                title: '15 sekund',
-                desc: 'Od vizitky k podepsanému PDF',
+                title: '3 minuty místo 40',
+                desc: 'Smlouva hotová, než dopiješ kafe',
               },
               {
                 icon: Check,
-                title: 'Žádné psaní',
-                desc: 'Ctrl+V, foto, URL — všechno se hodí',
+                title: 'Méně nervů',
+                desc: 'Žádné hledání IČO, žádné přepisování PDF',
               },
               {
                 icon: Shield,
@@ -184,6 +185,13 @@ export function LandingPage({ onStart }: LandingPageProps) {
             <FileText className="w-4 h-4 text-[#a1a1aa] shrink-0" />
             PDF připraven
           </span>
+        </div>
+      </section>
+
+      {/* ── Právní disclaimer ── */}
+      <section className="px-6 py-6 border-t border-[rgba(255,255,255,0.06)] relative z-10">
+        <div className="max-w-3xl mx-auto">
+          <DisclaimerBanner />
         </div>
       </section>
     </div>

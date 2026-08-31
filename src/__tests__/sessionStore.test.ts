@@ -66,3 +66,85 @@ describe('sessionStore', () => {
     expect(loaded!.contractType).toBeNull();
   });
 });
+
+// ──────────────────────────────────────────────────────────────────────────
+// B3: Contract history tests
+// ──────────────────────────────────────────────────────────────────────────
+
+import {
+  saveToHistory,
+  getHistory,
+  loadFromHistory,
+  deleteFromHistory,
+  clearHistory,
+} from '../lib/sessionStore';
+
+describe('contract history (B3)', () => {
+  beforeEach(() => {
+    localStorageMock.clear();
+  });
+
+  it('saves a contract to history and returns an id', () => {
+    const id = saveToHistory(null, 'nda', { contractType: 'nda', poskytovatel: 'Test s.r.o.' }, []);
+    expect(id).toBeTruthy();
+    const history = getHistory();
+    expect(history).toHaveLength(1);
+    expect(history[0].id).toBe(id);
+    expect(history[0].contractType).toBe('nda');
+    expect(history[0].status).toBe('in_progress');
+  });
+
+  it('updates an existing entry instead of duplicating when same id is used', () => {
+    const id = saveToHistory(null, 'nda', { contractType: 'nda', poskytovatel: 'A' }, []);
+    saveToHistory(id, 'nda', { contractType: 'nda', poskytovatel: 'B' }, []);
+    const history = getHistory();
+    expect(history).toHaveLength(1);
+    expect(history[0].fields.poskytovatel).toBe('B');
+  });
+
+  it('loads a specific contract from history by id', () => {
+    const id = saveToHistory(null, 'rent', { contractType: 'rent', najemce: 'Karel' }, []);
+    const loaded = loadFromHistory(id);
+    expect(loaded).not.toBeNull();
+    expect(loaded!.contractType).toBe('rent');
+    expect(loaded!.fields.najemce).toBe('Karel');
+  });
+
+  it('returns null when loading a non-existent history id', () => {
+    expect(loadFromHistory('nope')).toBeNull();
+  });
+
+  it('deletes a contract from history', () => {
+    const id = saveToHistory(null, 'work', { contractType: 'work' }, []);
+    expect(getHistory()).toHaveLength(1);
+    deleteFromHistory(id);
+    expect(getHistory()).toHaveLength(0);
+  });
+
+  it('marks a contract as completed', () => {
+    const id = saveToHistory(null, 'nda', { contractType: 'nda' }, [], 'completed');
+    const loaded = loadFromHistory(id);
+    expect(loaded!.status).toBe('completed');
+  });
+
+  it('builds a title from the contract type and party', () => {
+    const id = saveToHistory(null, 'nda', { contractType: 'nda', poskytovatel: 'Acme s.r.o.' }, []);
+    const loaded = loadFromHistory(id);
+    expect(loaded!.title).toContain('Dohoda o mlčenlivosti');
+    expect(loaded!.title).toContain('Acme s.r.o.');
+  });
+
+  it('clears the whole history', () => {
+    saveToHistory(null, 'nda', { contractType: 'nda' }, []);
+    saveToHistory(null, 'rent', { contractType: 'rent' }, []);
+    expect(getHistory()).toHaveLength(2);
+    clearHistory();
+    expect(getHistory()).toHaveLength(0);
+  });
+
+  it('history survives clearSession (not deleted on new session)', () => {
+    saveToHistory(null, 'nda', { contractType: 'nda' }, []);
+    clearSession();
+    expect(getHistory()).toHaveLength(1);
+  });
+});

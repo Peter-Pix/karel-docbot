@@ -1,9 +1,28 @@
 /**
  * Simple in-memory rate limiter for Vercel serverless functions.
- * 
- * Vercel serverless functions share memory within the same deployment,
- * but across cold starts the state resets. For production, consider
- * Vercel KV or Upstash Redis for persistent rate limiting.
+ *
+ * ─── DECISION (A5, 2026-08-31) ─────────────────────────────────────────────
+ * This in-memory implementation is ACCEPTED for single-user / low-traffic
+ * deployments (personal use, internal tooling, demo). It is simple, has zero
+ * external dependencies, and works fine when the app is used by one person.
+ *
+ * For PRODUCTION (multi-user, public launch) this is NOT sufficient:
+ * Vercel serverless functions are ephemeral — memory is shared within a
+ * single warm instance but resets across cold starts, and concurrent
+ * instances do NOT share the `store` Map. That means rate limits can be
+ * bypassed (each cold start / instance starts with an empty store) and
+ * limits are not globally consistent.
+ *
+ * → PRODUCTION REQUIREMENT: replace with a persistent, distributed store:
+ *   - Vercel KV (Redis)  → https://vercel.com/docs/storage/vercel-kv
+ *   - Upstash Redis      → https://upstash.com/docs/redis/overall/getstarted
+ *
+ * Migration path: swap the `store` Map for a Redis-backed implementation
+ * (e.g. `@upstash/redis` or Vercel KV SDK) using the same `checkRateLimit`
+ * signature, so API routes (chat.ts, analyze-risks.ts, parse-entity.ts,
+ * parse-entity-multi.ts) need no changes. Keep this file as the interface
+ * contract; add a `shared/rateLimitRedis.ts` for the production impl.
+ * ────────────────────────────────────────────────────────────────────────────
  */
 
 interface RateLimitEntry {

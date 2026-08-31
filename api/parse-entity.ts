@@ -1,10 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { buildParserSystemPrompt, buildParserUserPrompt } from '../src/lib/aiParser';
 import { checkRateLimit, getClientIP } from '../shared/rateLimit';
-
-const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
-const OLLAMA_ENDPOINT = process.env.OLLAMA_API_ENDPOINT || 'https://ollama.com/api/chat';
-const DEFAULT_MODEL = process.env.OLLAMA_PARSER_MODEL || 'gemma4:31b-cloud';
+import { DEFAULT_MODEL, queryOllama } from '../shared/ollama';
 
 interface ParseRequest {
   text?: string;
@@ -13,63 +10,6 @@ interface ParseRequest {
   url?: string;
   contractType: 'nda' | 'rent' | 'employment' | 'work';
   hint?: string;
-}
-
-async function queryOllamaVision(
-  model: string,
-  systemInstruction: string,
-  userText: string,
-  imageBase64?: string,
-  imageMimeType?: string
-): Promise<string> {
-  if (!OLLAMA_API_KEY) {
-    throw new Error('OLLAMA_API_KEY not configured');
-  }
-
-  const userMessage: any = { role: 'user', content: userText };
-
-  if (imageBase64) {
-    userMessage.images = [imageBase64];
-    userMessage.content = userText || 'Extrahuj z tohoto obrázku (vizitky/faktury) všechny údaje o osobách a firmách.';
-  }
-
-  const body = {
-    model,
-    messages: [
-      { role: 'system', content: systemInstruction },
-      userMessage,
-    ],
-    stream: false,
-    format: 'json',
-    options: { temperature: 0.1 },
-  };
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000);
-
-  try {
-    const response = await fetch(OLLAMA_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${OLLAMA_API_KEY}`,
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Ollama API error ${response.status}: ${errText}`);
-    }
-
-    const data = (await response.json()) as any;
-    return data?.message?.content || '';
-  } catch (err) {
-    clearTimeout(timeoutId);
-    throw err;
-  }
 }
 
 async function fetchUrlContent(url: string): Promise<string> {
@@ -144,12 +84,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const userPrompt = buildParserUserPrompt(inputText, contractType, 'counterparty');
 
     try {
-      const responseText = await queryOllamaVision(
+      const userMessage: any = { role: 'user', content: userPrompt };
+      if (imageBase64) {
+        userMessage.images = [imageBase64];
+      }
+      const responseText = await queryOllama(
         DEFAULT_MODEL,
-        systemPrompt,
-        userPrompt,
-        imageBase64,
-        imageMimeType
+        [
+          { role: 'system', content: systemPrompt },
+          userMessage,
+        ],
+        { temperature: 0.1, format: 'json' }
       );
 
       const cleaned = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();

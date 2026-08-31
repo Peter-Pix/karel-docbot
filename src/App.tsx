@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { AppHeader } from './components/AppHeader';
 import { DocumentSelection } from './components/DocumentSelection';
+import { ContractHistory } from './components/ContractHistory';
 import { ChatPanel } from './components/ChatPanel';
 import { DocumentPreview } from './components/DocumentPreview';
 import { RiskAnalysisPanel } from './components/RiskAnalysisPanel';
@@ -8,13 +9,13 @@ import { FieldsEditorPanel } from './components/FieldsEditorPanel';
 import { SettingsModal } from './components/SettingsModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useToast } from './components/Toast';
-import { saveSession, loadSession, clearSession } from "./lib/sessionStore";
+import { saveSession, loadSession, clearSession, saveToHistory, getHistory, loadFromHistory, deleteFromHistory, ContractHistoryEntry } from "./lib/sessionStore";
 import { AdaptiveFlowWizard } from './components/AdaptiveFlowWizard';
 import { LandingPage } from './components/LandingPage';
 import { ContractType, Message, ContractFields, RiskAnalysisResult } from './types';
 import { getDefaultFields, getContractTitle, generateContractHTML } from './lib/templateGenerator';
 import { getFieldKeys } from './lib/contracts';
-import { ShieldCheck, MessageSquare, Edit3 } from 'lucide-react';
+import { ShieldCheck, MessageSquare, Edit3, History, CheckCircle2 } from 'lucide-react';
 
 // ─── Smart Suggestions Engine ────────────────────────────────────────────────
 type SuggestionContext = {
@@ -84,6 +85,8 @@ export default function App() {
   const [selectedModel, setSelectedModel] = useState<string>('deepseek-v4-flash');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
+  const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
+  const [historyEntries, setHistoryEntries] = useState<ContractHistoryEntry[]>(() => getHistory());
 
   // ── Restore session on mount ──
   useEffect(() => {
@@ -97,8 +100,14 @@ export default function App() {
   useEffect(() => {
     if (contractType || messages.length > 0) {
       saveSession(contractType, fields, messages);
+      // B3: persist to history so the contract survives new sessions
+      if (contractType) {
+        const id = saveToHistory(currentHistoryId, contractType, fields, messages, 'in_progress');
+        setCurrentHistoryId(id);
+        setHistoryEntries(getHistory());
+      }
     }
-  }, [contractType, fields, messages]);
+  }, [contractType, fields, messages, currentHistoryId]);
 
   // Adaptive Flow Wizard
   const [isWizardOpen, setIsWizardOpen] = useState(false);
@@ -125,6 +134,35 @@ export default function App() {
     clearSession();
     setShowRestorePrompt(false);
   }, []);
+
+  // ── B3: History handlers ──
+  const handleOpenHistory = useCallback((entry: ContractHistoryEntry) => {
+    setContractType(entry.contractType);
+    setFields(entry.fields);
+    setMessages(entry.messages);
+    setCurrentHistoryId(entry.id);
+    setShowLanding(false);
+    setShowRestorePrompt(false);
+    setRiskAnalysis(null);
+    showToast('info', 'Načtena uložená smlouva');
+  }, [showToast]);
+
+  const handleDeleteHistory = useCallback((id: string) => {
+    deleteFromHistory(id);
+    setHistoryEntries(getHistory());
+    if (currentHistoryId === id) {
+      setCurrentHistoryId(null);
+    }
+    showToast('info', 'Smlouva odstraněna z historie');
+  }, [currentHistoryId, showToast]);
+
+  const handleMarkCompleted = useCallback(() => {
+    if (!contractType) return;
+    const id = saveToHistory(currentHistoryId, contractType, fields, messages, 'completed');
+    setCurrentHistoryId(id);
+    setHistoryEntries(getHistory());
+    showToast('success', 'Smlouva označena jako dokončená a uložena do historie');
+  }, [contractType, currentHistoryId, fields, messages, showToast]);
 
   // Memoized contract HTML for risk analysis (avoids regenerating on every render)
   const contractHTML = useMemo(() => {
@@ -417,9 +455,31 @@ export default function App() {
 
           <main className="flex-grow w-full max-w-7xl mx-auto px-4 py-6 md:py-8 flex flex-col">
             {!contractType && !showLanding ? (
-              <ErrorBoundary label="výběr smlouvy">
-                <DocumentSelection onSelect={handleSelectContract} />
-              </ErrorBoundary>
+              <>
+                <ErrorBoundary label="výběr smlouvy">
+                  <DocumentSelection onSelect={handleSelectContract} />
+                </ErrorBoundary>
+
+                {/* B3: Historie smluv */}
+                {historyEntries.length > 0 && (
+                  <div className="max-w-5xl mx-auto w-full mt-10 animate-fade-in">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-base font-semibold text-[#f4f4f5] flex items-center gap-2">
+                        <History className="w-4 h-4 text-[#c8962e]" />
+                        Historie smluv
+                      </h2>
+                      <span className="text-[11px] text-[#71717a]">
+                        {historyEntries.length} uložených
+                      </span>
+                    </div>
+                    <ContractHistory
+                      entries={historyEntries}
+                      onOpen={handleOpenHistory}
+                      onDelete={handleDeleteHistory}
+                    />
+                  </div>
+                )}
+              </>
             ) : (
           <div className="grid lg:grid-cols-12 gap-5 items-start h-full">
             {/* Left Panel */}
@@ -491,6 +551,16 @@ export default function App() {
 
             {/* Right Panel — Document Preview */}
             <div className="lg:col-span-7 h-full">
+              <div className="flex items-center justify-end mb-2">
+                <button
+                  onClick={handleMarkCompleted}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded-lg hover:bg-emerald-400/20 transition-colors cursor-pointer"
+                  title="Uložit smlouvu do historie jako dokončenou"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Uložit jako dokončenou
+                </button>
+              </div>
               <ErrorBoundary label="náhled smlouvy">
                 <DocumentPreview
                   contractType={contractType}

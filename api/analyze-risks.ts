@@ -1,55 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { checkRateLimit, getClientIP } from '../shared/rateLimit';
-
-const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
-const OLLAMA_ENDPOINT = process.env.OLLAMA_API_ENDPOINT || 'https://ollama.com/api/chat';
-
-async function queryOllamaChat(model: string, systemInstruction: string, prompt: string, jsonFormat: boolean = false): Promise<string> {
-  if (!OLLAMA_API_KEY) {
-    throw new Error("OLLAMA_API_KEY not configured");
-  }
-
-  const body: any = {
-    model,
-    messages: [
-      { role: "system", content: systemInstruction },
-      { role: "user", content: prompt }
-    ],
-    stream: false,
-    options: { temperature: 0.3 }
-  };
-
-  if (jsonFormat) {
-    body.format = "json";
-  }
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000);
-
-  try {
-    const response = await fetch(OLLAMA_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${OLLAMA_API_KEY}`
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Ollama API error ${response.status}: ${errText}`);
-    }
-
-    const data = await response.json() as any;
-    return data?.message?.content || "";
-  } catch (err) {
-    clearTimeout(timeoutId);
-    throw err;
-  }
-}
+import { DEFAULT_MODEL, queryOllama } from '../shared/ollama';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Rate limit: 10 requests per minute per IP (risk analysis is expensive)
@@ -73,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { contractType, contractHTML, selectedModel } = req.body;
-    const modelToUse = selectedModel || "deepseek-v4-flash";
+    const modelToUse = selectedModel || DEFAULT_MODEL;
 
     if (!contractHTML) {
       return res.status(400).json({ error: "contractHTML is required" });
@@ -97,7 +48,14 @@ Odpověz VŽDY jako validní JSON dokument s těmito klíči: "risks", "safetySc
     const prompt = `Zde je HTML text smlouvy k analýze:\n\n${contractHTML}`;
 
     try {
-      const responseText = await queryOllamaChat(modelToUse, systemInstruction, prompt, true);
+      const responseText = await queryOllama(
+        modelToUse,
+        [
+          { role: 'system', content: systemInstruction },
+          { role: 'user', content: prompt },
+        ],
+        { temperature: 0.3, format: 'json' }
+      );
       if (responseText) {
         const cleanedText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
         const parsed = JSON.parse(cleanedText);

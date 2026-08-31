@@ -21,7 +21,7 @@
 ### Deployment
 - **Platform:** Vercel (project linked, `prj_wkkbJsUBwvKbDDb4RkzZHkH5DgJb`)
 - **Domain:** `docbot.petrpiskacek.cloud`
-- **OG image:** ✅ Present (`public/og-image.png`, 200 KB)
+- **OG image:** ✅ Present (`public/og.png`, 1200×630, 38 KB)
 - **CSP headers:** ✅ Already configured in `vercel.json`
 - **Env vars:** `.env.example` documented, `.gitignore` correct
 
