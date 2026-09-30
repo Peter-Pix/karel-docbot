@@ -52,7 +52,7 @@
 
 - **Ollama klíč v .env.local** — není v gitu (ignorován), OK.
 - **Security headers závisí na vercel.json** — lokální dev server (`server/dev-server.ts`) je bez CORS restrikcí (`Access-Control-Allow-Origin: *`); pro produkci jen přes VPS/Vercel.
-- **Default model** — sjednocen na `deepseek-v4-flash` v `shared/ollama.ts` (DEFAULT_MODEL), všechny API soubory ho importují (ROADMAP A1).
+- **Default model** — sjednocen na `deepseek-v4.1-flash` v `shared/ollama.ts` (DEFAULT_MODEL), všechny API soubory ho importují (ROADMAP A1).
 - **Fallback `smartLocalChatFallback`** je heuristický regex — chrání před pádem beze AI, ale kvalita odpovědí beze AI je omezená.
 - **Právní korektnost = blocker** (ROADMAP): fallback scanner je hardcoded na konkrétní doložky/částky; generované free-text smlouvy nejsou plně právně ověřeny. Bez ověření Fáze 1 neposílat ven (dle ROADMAP).
 - **README** — rozšířen o detailní nastavení: Ollama cloud klíč (.env), model, rate limity, e2e testy, právní vrstvu (ROADMAP C3).

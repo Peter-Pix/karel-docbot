@@ -81,8 +81,8 @@ export default function App() {
   const [nextSuggestedPrompts, setNextSuggestedPrompts] = useState<string[]>([]);
   const [highlightField, setHighlightField] = useState<string | undefined>(undefined);
 
-  // Model — deepseek-v4-flash as primary
-  const [selectedModel, setSelectedModel] = useState<string>('deepseek-v4-flash');
+  // Model — deepseek-v4.1-flash as primary
+  const [selectedModel, setSelectedModel] = useState<string>('deepseek-v4.1-flash');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);

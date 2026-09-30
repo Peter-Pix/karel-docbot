@@ -6,7 +6,7 @@
 
 ## Fáze A: Základ (stabilita a bezpečnost)
 
-- [x] **A1** Unifikovat default model LLM na `deepseek-v4-flash` napříč všemi API soubory (chat.ts, analyze-risks.ts, parse-entity.ts, parse-entity-multi.ts aktuálně používají různé modely včetně `gemma4:31b-cloud`). Hotovo když: `grep -rn "31b-cloud\|defaultModel\|OLLAMA_MODEL" api/ shared/` najde jediný default model definovaný v jednom sdíleném místě. (5 min)
+- [x] **A1** Unifikovat default model LLM na `deepseek-v4.1-flash` napříč všemi API soubory (chat.ts, analyze-risks.ts, parse-entity.ts, parse-entity-multi.ts aktuálně používají různé modely včetně `deepseek-v4.1-flash-cloud`). Hotovo když: `grep -rn "31b-cloud\|defaultModel\|OLLAMA_MODEL" api/ shared/` najde jediný default model definovaný v jednom sdíleném místě. (5 min)
 - [x] **A2** Vyřešit duplicitní lockfily — rozhodnout mezi npm a pnpm, jeden odstranit. Hotovo když: v repo rootu je jen jeden z `package-lock.json`/`pnpm-lock.yaml` a README používá s ním konzistentní příkaz. (5 min)
 - [x] **A3** Přesunout e2e screenshoty (`e2e-*.png`) z repo rootu do `test-results/` a přidat `test-results/` do `.gitignore`. Hotovo když: `ls *.png` v rootu je prázdný a `git status` je čistý (soubory untracked → ignorované). (5 min)
 - [x] **A4** Extrahovat duplicitní `queryOllama*` logiku do sdíleného helperu (např. `shared/ollama.ts`) a použít ho ve 4 API souborech. Hotovo když: `grep -c "fetch\|AbortController" api/chat.ts api/analyze-risks.ts api/parse-entity.ts api/parse-entity-multi.ts` ukazuje jen jedno volání helperu, ne 4 duplicitní bloky, a `npm test` stále 57/57 PASS. (5 min)

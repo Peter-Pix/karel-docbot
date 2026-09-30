@@ -5,9 +5,9 @@
 // must import DEFAULT_MODEL from here instead of hardcoding their own default.
 //
 // Override via env var OLLAMA_MODEL (e.g. for a specific deployment).
-// The default is deepseek-v4-flash (fast, cheap, good enough for contract drafting).
+// The default is deepseek-v4.1-flash (fast, cheap, good for contract drafting).
 
-export const DEFAULT_MODEL = process.env.OLLAMA_MODEL || 'deepseek-v4-flash';
+export const DEFAULT_MODEL = process.env.OLLAMA_MODEL || 'deepseek-v4.1-flash';
 
 // ─── Shared Ollama chat helper ─────────────────────────────────────────
 // Centralizes the fetch + AbortController + error handling that used to be
@@ -31,7 +31,7 @@ export interface QueryOllamaOptions {
 }
 
 const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
-const OLLAMA_ENDPOINT = process.env.OLLAMA_API_ENDPOINT || 'https://ollama.com/api/chat';
+const OLLAMA_ENDPOINT = process.env.OLLAMA_API_ENDPOINT || 'https://ollama.com/v1/chat/completions';
 
 /**
  * Send a chat completion request to the Ollama cloud API and return the
@@ -50,11 +50,11 @@ export async function queryOllama(
     model,
     messages,
     stream: false,
-    options: { temperature: options.temperature ?? 0.3 },
+    temperature: options.temperature ?? 0.3,
   };
 
   if (options.format) {
-    body.format = options.format;
+    body.response_format = { type: 'json_object' };
   }
 
   const controller = new AbortController();
@@ -78,7 +78,7 @@ export async function queryOllama(
     }
 
     const data = (await response.json()) as any;
-    return data?.message?.content || '';
+    return data?.choices?.[0]?.message?.content || data?.message?.content || '';
   } catch (err) {
     clearTimeout(timeoutId);
     throw err;

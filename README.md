@@ -41,7 +41,7 @@ OLLAMA_API_KEY=your_ollama_api_key_here
 # Pro lokální vývoj s lokální Ollama instancí.
 # OLLAMA_API_ENDPOINT=http://localhost:11434/api/chat
 
-# Override default modelu (default: deepseek-v4-flash)
+# Override default modelu (default: deepseek-v4.1-flash)
 # DEFAULT_MODEL=kimi-k2.7-code
 ```
 
@@ -49,9 +49,9 @@ OLLAMA_API_KEY=your_ollama_api_key_here
 
 ### 2. Model
 
-- **Výchozí model:** `deepseek-v4-flash` (rychlý a levný) — definovaný v jednom sdíleném místě (`shared/`), používají ho všechny API soubory.
+- **Výchozí model:** `deepseek-v4.1-flash` (rychlý a levný) — definovaný v jednom sdíleném místě (`shared/`), používají ho všechny API soubory.
 - **Override:** přes `DEFAULT_MODEL` v `.env` nebo výběr v UI (SettingsModal).
-- **Dostupné modely v UI:** `deepseek-v4-flash` (výchozí), `kimi-k2.7-code` (silnější pro komplexní analýzu).
+- **Dostupné modely v UI:** `deepseek-v4.1-flash` (výchozí), `kimi-k2.7-code` (silnější pro komplexní analýzu).
 - Všechny modely běží na **Ollama cloudu** — žádná lokální inference.
 
 ### 3. Rate limity

@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // paths are exercised without a real OLLAMA_API_KEY / network call.
 const queryOllamaMock = vi.fn();
 vi.mock('../../shared/ollama', () => ({
-  DEFAULT_MODEL: 'deepseek-v4-flash',
+  DEFAULT_MODEL: 'deepseek-v4.1-flash',
   queryOllama: (...args: any[]) => queryOllamaMock(...args),
 }));
 

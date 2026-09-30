@@ -9,7 +9,7 @@ interface SettingsModalProps {
 }
 
 const AVAILABLE_MODELS = [
-  { id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', desc: 'Rychlý a levný, výchozí model' },
+  { id: 'deepseek-v4.1-flash', label: 'DeepSeek V4 Flash', desc: 'Rychlý a levný, výchozí model' },
   { id: 'kimi-k2.7-code', label: 'Kimi K2.7 Code', desc: 'Silnější model pro komplexní analýzu' },
 ];
 
